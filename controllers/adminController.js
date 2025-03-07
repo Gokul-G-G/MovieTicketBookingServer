@@ -2,7 +2,8 @@
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { Admin } from "../models/adminModel.js";
-import {User} from "../models/userModel.js"
+import { User } from "../models/userModel.js";
+import { TheaterOwner } from "../models/theaterModel.js";
 
 /* ============
  ADMIN LOGIN
@@ -85,13 +86,50 @@ export const getAllUsers = async (req, res) => {
 /* ============
  DELETE USER
 =============== */
-export const deleteUser = async (req, res) =>{
-    try {
-         await User.findByIdAndDelete(req.params.id);
-         res.status(200).json({ message: "User deleted successfully" });
-    } catch (error) {
-         res
-           .status(500)
-           .json({ message: "Internal server error", error: error.message });
+export const deleteUser = async (req, res) => {
+  try {
+    await User.findByIdAndDelete(req.params.id);
+    res.status(200).json({ message: "User deleted successfully" });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Internal server error", error: error.message });
+  }
+};
+
+/* ============
+ GET ALL THEATER 
+=============== */
+export const getAllTheater = async (req, res) => {
+  try {
+    // Fetch all theater owners from the database
+    const theaters = await TheaterOwner.find().select("-password");
+
+    // Check if theaters exist
+    if (!theaters || theaters.length === 0) {
+      return res.status(404).json({ message: "No theaters found" });
     }
+    // Send response
+    res
+      .status(200)
+      .json({ message: "Theaters fetched successfully", data: theaters });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Internal Server Error", error: error.message });
+  }
+};
+
+/* ============
+ DELETE THEATER 
+=============== */
+export const deleteTheater = async (req, res) =>{
+     try {
+       await TheaterOwner.findByIdAndDelete(req.params.id);
+       res.status(200).json({ message: "Theater deleted successfully" });
+     } catch (error) {
+       res
+         .status(500)
+         .json({ message: "Internal server error", error: error.message });
+     }
 }

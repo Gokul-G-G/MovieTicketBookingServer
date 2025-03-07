@@ -1,6 +1,8 @@
 import express from "express";
-import { adminLogin, adminLogout, adminProfile, deleteUser, getAllUsers } from "../controllers/adminController.js";
+import { adminLogin, adminLogout, adminProfile, deleteTheater, deleteUser, getAllTheater, getAllUsers } from "../controllers/adminController.js";
 import { authorizedAdmin } from "../middlewares/adminAuthMiddleware.js";
+import { verifyMovieAccess } from "../middlewares/authorizeRoles.js";
+import { addMovie } from "../controllers/movieController.js";
 
 const router = express.Router();
 
@@ -14,12 +16,12 @@ router.get("/users", authorizedAdmin,getAllUsers);
 router.delete("/users/:id", authorizedAdmin,deleteUser);
 
 //Theater Management Routes
-// router.get("/theaters", authorizedAdmin, getAllTheaters);
-// router.delete("/theaters/:id", authorizedAdmin, deleteTheater);
+router.get("/theaters", authorizedAdmin,getAllTheater);
+router.delete("/theaters/:id", authorizedAdmin,deleteTheater);
 
 //Movie Management Routes
 // router.get("/movies", authorizedAdmin, getAllMovies);
-// router.post("/movies", authorizedAdmin, addMovie);
+router.post("/movies",verifyMovieAccess,authorizedAdmin,addMovie);
 // router.put("/movies/:id", authorizedAdmin, updateMovie);
 // router.delete("/movies/:id", authorizedAdmin, deleteMovie);
 

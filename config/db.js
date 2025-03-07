@@ -2,24 +2,22 @@ import { connect } from "mongoose";
 import { Admin } from "../models/adminModel.js";
 import bcrypt from 'bcrypt'
 const url = process.env.MONGO_URI
-
+const adminPassword = process.env.ADMIN_PWD;
 const insertAdmin = async () => {
   try {
+    //check admin exist on DB
     const adminExists = await Admin.findOne({ email: "admin@example.com" });
-
+    //If not exist create admin use the details
     if (!adminExists) {
-      const hashedPassword = await bcrypt.hash("securepassword123", 10);
+      const hashedPassword = await bcrypt.hash(adminPassword, 10);
       const admin = new Admin({
         name: "Admin",
         email: "admin@example.com",
         password: hashedPassword,
       });
-
+    //save admin data to DB
       await admin.save();
-      console.log("Admin user created successfully.");
-    } else {
-      console.log("Admin user already exists.");
-    }
+    } 
   } catch (error) {
     console.error("Error creating admin:", error);
   }
