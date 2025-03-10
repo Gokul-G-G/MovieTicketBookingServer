@@ -4,16 +4,15 @@ import {
   forgotPassword,
   userAvailable,
   userSignup,
-} from "../controllers/userController.js";
-import {
   userLogin,
   userLogout,
   userProfile,
+  userDeactivate,
+  profileEdit,
 } from "../controllers/userController.js";
 import { authorizeUser } from "../middlewares/userAuthMiddleware.js";
-import { profileEdit } from "../controllers/userController.js";
-import { userDeactivate } from "../controllers/userController.js";
 import { getAllMovies } from "../controllers/movieController.js";
+import { bookShow } from "../controllers/bookingController.js";
 
 const router = express.Router();
 
@@ -36,5 +35,10 @@ router.get("/check-user", authorizeUser, userAvailable);
 
 //Movie Booking
 router.get("/movies", authorizeUser, getAllMovies);
+// Route to book a show (protected route)
+router.post("/book", authorizeUser,bookShow);
+
+//payment
+
 
 export default router;

@@ -1,76 +1,35 @@
-const mongoose = require("mongoose");
+import { Schema, model } from "mongoose";
 
-const bookingSchema = new mongoose.Schema(
+const bookingSchema = new Schema(
   {
-    showId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Show", // Reference to the Show model
+    user: { type: Schema.Types.ObjectId, ref: "User", required: true }, // User who booked the ticket
+    show: { type: Schema.Types.ObjectId, ref: "Show", required: true }, // Show ID
+    theater: {
+      type: Schema.Types.ObjectId,
+      ref: "TheaterOwner",
       required: true,
-    },
-    movieId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Movie", // Reference to the Movie model
-      required: true,
-    },
-    theaterId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "TheaterOwner", // Reference to the Theater Owner model
-      required: true,
-    },
-    showTime: {
-      type: String,
-      required: true,
-    },
-    showDate: {
-      type: Date,
-      required: true,
-    },
+    }, // Theater ID
     seats: [
       {
-        row: {
+        seatLabel: { type: String, required: true }, // e.g., H1, H2, G3
+        seatType: {
           type: String,
+          enum: ["Silver", "Gold", "Platinum"],
           required: true,
         },
-        col: {
-          type: Number,
-          required: true,
-        },
-        seat_id: {
-          type: String,
-          required: true,
-        },
-        price: {
-          type: Number,
-          required: true,
-        },
+        price: { type: Number, required: true }, // Price per seat
       },
     ],
-    totalPrice: {
-      type: Number,
-      required: true,
-    },
-    paymentId: {
+    totalAmount: { type: Number, required: true }, // Total price of booking
+    paymentStatus: {
       type: String,
-      required: true,
-    },
-    paymentType: {
-      type: String,
-      required: true,
-    },
-    userId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User", // Reference to the User model
-      required: true,
-    },
-    status: {
-      type: String,
-      enum: ["Pending", "Confirmed", "Cancelled"],
+      enum: ["Pending", "Success", "Failed"],
       default: "Pending",
     },
+    bookingTime: { type: Date, default: Date.now }, // Timestamp of booking
+    qrCode: { type: String }, // Store QR code URL (Generated dynamically)
   },
   { timestamps: true }
 );
 
-export const Booking = mongoose.model("Booking", bookingSchema);
-
-
+export const Booking = model("Booking", bookingSchema);

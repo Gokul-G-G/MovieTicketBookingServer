@@ -12,47 +12,120 @@ import { Movie } from "../models/movieModel.js";
 ============ */
 export const ownerSignup = async (req, res) => {
   try {
-    //Get Data from body
-    const { name, email, phone, location, acType, password, profilePic } =
-      req.body;
-    //validation
-    if (!email || !phone || !location || !password) {
-      res.status(401).json({ message: "All fields are needed" });
-    }
-    //Check already exist
-    const existOwner = await TheaterOwner.findOne({ email });
-    if (existOwner) {
-      res.status(401).json({ message: "Owner already exist" });
-    }
-    //provide default profile picture
-    const profilePicUrl = profilePic || generateProfilePic(name);
-    //password hash
-    const hashedPassword = await bcrypt.hash(password, 10);
-    //save to DB
-    const newtheaterOwner = new TheaterOwner({
+    // Get Data from body
+    const {
       name,
       email,
       phone,
       location,
-      acType,
+      password,
+      profilePic,
+      seatConfiguration,
+    } = req.body;
+
+    // Validation
+    if (
+      !name ||
+      !email ||
+      !phone ||
+      !location ||
+      !password ||
+      !seatConfiguration ||
+      seatConfiguration.length === 0
+    ) {
+      return res
+        .status(400)
+        .json({
+          message: "All fields are required, including seat configuration.",
+        });
+    }
+
+    // Check if owner already exists
+    const existOwner = await TheaterOwner.findOne({ email });
+    if (existOwner) {
+      return res.status(400).json({ message: "Owner already exists" });
+    }
+
+    // Provide default profile picture
+    const profilePicUrl = profilePic || generateProfilePic(name);
+
+    // Hash password
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Validate seat configuration
+    const validSeatTypes = ["Silver", "Gold", "Platinum"];
+
+    const generateSeatStructure = (seatType, row, seat) => {
+      let seatRows = [];
+      const seatTypes = {
+        Silver: ["A", "B", "C"],
+        Gold: ["D", "E", "F"],
+        Platinum: ["G", "H", "I"],
+      };  
+      const selectedRows = seatTypes[seatType];
+      for (let i = 0; i < row; i++) {
+        let rowLabel = selectedRows[i] // Convert to A, B, C...
+        let seats = [];
+        for (let j = 1; j <= seat; j++) {
+          seats.push({
+            seatLabel: `${rowLabel}${j}`, // Format like A1, A2, B1...
+            isBooked: false,
+          });
+        }
+        seatRows.push({ rowLabel, seats }); // Corrected seat instead of col
+      }
+      return seatRows;
+    };
+
+    // Process seat configurations
+    const validatedSeats = seatConfiguration.map((item) => {
+      if (
+        !validSeatTypes.includes(item.seatType) ||
+        item.totalSeats <= 0 ||
+        item.price <= 0 ||
+        item.row <= 0 || // Ensure rows and seats per row are provided
+        item.seat <= 0
+      ) {
+        throw new Error("Invalid seat configuration.");
+      }
+
+      return {
+        seatType: item.seatType,
+        totalSeats: item.totalSeats,
+        price: item.price,
+        rows: generateSeatStructure(item.seatType, item.row, item.seat), // Fixed incorrect field
+      };
+    });
+
+    // Save to DB
+    const newTheaterOwner = new TheaterOwner({
+      name,
+      email,
+      phone,
+      location,
       password: hashedPassword,
       profilePic: profilePicUrl,
       isVerified: false,
       role: "theaterOwner",
+      seatConfiguration: validatedSeats, // Store structured seat details
     });
 
-    await newtheaterOwner.save();
+    await newTheaterOwner.save();
+
     // Notify admin about the new theater owner request
-    notifyAdmin(newtheaterOwner);
-    //Generate Token
-    const token = generateToken(newtheaterOwner._id, newtheaterOwner.role);
+    notifyAdmin(newTheaterOwner);
+
+    // Generate Token
+    const token = generateToken(newTheaterOwner._id, newTheaterOwner.role);
     res.cookie("token", token, { httpOnly: true, secure: true });
-    //Send data to frontend Without password
-    const ownerWithoutPassword = newtheaterOwner.toObject();
+
+    // Send data to frontend Without password
+    const ownerWithoutPassword = newTheaterOwner.toObject();
     delete ownerWithoutPassword.password;
+
     res
       .status(200)
-      .json({ data: ownerWithoutPassword, message: "Owner Signup Success" });
+      .json({ data: ownerWithoutPassword, message: "Owner Signup Successful" });
   } catch (error) {
     res
       .status(error.status || 500)

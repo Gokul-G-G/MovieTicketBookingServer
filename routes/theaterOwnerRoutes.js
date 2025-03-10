@@ -13,6 +13,7 @@ import {
 import { authorizeTheaterOwner } from "../middlewares/theaterOwnerAuthMiddleware.js";
 import { addMovie,deleteMovie,updateMovie } from "../controllers/movieController.js";
 import { authorizedTheaterOwnerOrAdmin, verifyMovieAccess } from "../middlewares/authorizeRoles.js";
+import { addShow } from "../controllers/showController.js";
 
 
 const router = express.Router();
@@ -43,19 +44,19 @@ router.delete("/movies/:id",verifyMovieAccess,authorizedTheaterOwnerOrAdmin,dele
 
 //Showtime Management
 router.get("/showtimes"); //All Shows
-router.post("/showtimes"); // Add show
+router.post("/showtimes",authorizeTheaterOwner,addShow); // Add show
 router.put("/showtimes/:id"); // Edit Show
 router.delete("/showtimes/:id"); // Delete Show
 
 //Booking management
-router.get("/bookings"); // get all bookings
+// router.get("/bookings"); // get all bookings
 
 //Earnings Report
-router.get("/earnings"); // Earnings report
+// router.get("/earnings"); // Earnings report
 
 // Customer Feedback
-router.get("/feedbacks");
-router.post("/feedbacks/:id/reply");
+// router.get("/feedbacks");
+// router.post("/feedbacks/:id/reply");
 
 // Check if user exists
 router.get("/check-user");

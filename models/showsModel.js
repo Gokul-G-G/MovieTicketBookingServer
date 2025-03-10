@@ -1,28 +1,22 @@
-const mongoose = require("mongoose");
+import mongoose, { Schema } from "mongoose";
 
-const showSchema = new mongoose.Schema(
+const showSchema = new Schema(
   {
     movieId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Movie", // References Movie model
+      type: Schema.Types.ObjectId,
+      ref: "Movie",
       required: true,
     },
     theaterId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "TheaterOwner", // References TheaterOwner model
+      type: Schema.Types.ObjectId,
+      ref: "TheaterOwner",
       required: true,
     },
-    screen: {
-      type: String, // Stores screen number (e.g., "Screen 1", "IMAX Screen")
-      required: true,
-    },
-    date: {
-      type: Date,
-      required: true,
-    },
+    screen: { type: String, required: true },
+    date: { type: Date, required: true },
     timeSlots: [
       {
-        time: { type: String, required: true }, // Time slot (e.g., "02:30 PM")
+        time: { type: String, required: true },
         seats: [
           {
             seatType: {
@@ -30,30 +24,14 @@ const showSchema = new mongoose.Schema(
               enum: ["Silver", "Gold", "Platinum"],
               required: true,
             },
-            price: {
-              type: Number,
-              required: true,
-            },
-            rows: [
-              {
-                rowLabel: { type: String, required: true }, // Row name (H, G, F, etc.)
-                columns: [
-                  {
-                    columnLabel: { type: String, required: true },
-                    seat: [
-                      {
-                        seatNumber: { type: Number, required: true }, // Unique seat ID
-                        isBooked: { type: Boolean, default: false }, // Seat availability
-                      },
-                    ],
-                  },
-                ],
-              },
-            ],
+            totalSeats: { type: Number, required: true }, // From TheaterOwner model
+            price: { type: Number, required: true }, // From TheaterOwner model
+            bookedSeats: [{ type: Number }], // Array to track booked seats
           },
         ],
       },
     ],
+    totalSeats: { type: Number, required: true }, // Computed from seatConfig in TheaterOwner model
     status: {
       type: String,
       enum: ["Scheduled", "Completed", "Cancelled"],
@@ -63,4 +41,4 @@ const showSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-module.exports = mongoose.model("Show", showSchema);
+export const Show = mongoose.model("Show", showSchema);
