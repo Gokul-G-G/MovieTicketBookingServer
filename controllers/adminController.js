@@ -3,7 +3,9 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { Admin } from "../models/adminModel.js";
 import { User } from "../models/userModel.js";
+import { Notification } from "../models/notificationModel.js";
 import { TheaterOwner } from "../models/theaterModel.js";
+import { Movie } from "../models/movieModel.js";
 
 /* ============
  ADMIN LOGIN
@@ -123,13 +125,89 @@ export const getAllTheater = async (req, res) => {
 /* ============
  DELETE THEATER 
 =============== */
-export const deleteTheater = async (req, res) =>{
-     try {
-       await TheaterOwner.findByIdAndDelete(req.params.id);
-       res.status(200).json({ message: "Theater deleted successfully" });
-     } catch (error) {
-       res
-         .status(500)
-         .json({ message: "Internal server error", error: error.message });
-     }
-}
+export const deleteTheater = async (req, res) => {
+  try {
+    await TheaterOwner.findByIdAndDelete(req.params.id);
+    res.status(200).json({ message: "Theater deleted successfully" });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Internal server error", error: error.message });
+  }
+};
+
+
+
+
+
+
+
+/* ===============
+   GET UNREAD ADMIN NOTIFICATIONS
+================ */
+export const getAdminNotifications = async (req, res) => {
+  try {
+    const notifications = await Notification.find({ isRead: false })
+      .populate("ownerId", "name email phone location isVerified") // Include owner details
+      .sort({ createdAt: -1 }) // Show newest first
+      .lean(); // Optimize performance
+
+    res.status(200).json({ success: true, data: notifications });
+  } catch (error) {
+    console.error("Error fetching admin notifications:", error.message);
+    res.status(500).json({ success: false, message: "Internal Server Error" });
+  }
+};
+
+/* ===============
+   MARK NOTIFICATION AS READ & VERIFY THEATER OWNER
+================ */
+export const markNotificationAsReadAndVerify = async (req, res) => {
+  try {
+    const notificationId = req.params.id;
+    const { isVerified } = req.body; // Admin sends true (verify) or false (reject)
+
+    // Ensure isVerified is a boolean (true or false)
+    if (typeof isVerified !== "boolean") {
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid verification status" });
+    }
+
+    // Find the notification
+    const notification = await Notification.findById(notificationId);
+
+    if (!notification) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Notification not found" });
+    }
+
+    // Find the corresponding theater owner
+    const theaterOwner = await TheaterOwner.findById(notification.ownerId);
+    if (!theaterOwner) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Theater owner not found" });
+    }
+
+    // Update verification status
+    theaterOwner.isVerified = isVerified;
+    await theaterOwner.save();
+
+    // Mark notification as read
+    notification.isRead = true;
+    await notification.save();
+
+    res.status(200).json({
+      success: true,
+      message: `Theater owner ${
+        isVerified ? "verified" : "rejected"
+      } successfully`,
+      isVerified,
+    });
+  } catch (error) {
+    console.error("Error verifying theater owner:", error.message);
+    res.status(500).json({ success: false, message: "Internal Server Error" });
+  }
+};

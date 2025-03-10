@@ -14,6 +14,7 @@ const insertAdmin = async () => {
         name: "Admin",
         email: "admin@example.com",
         password: hashedPassword,
+        role: "admin",
       });
     //save admin data to DB
       await admin.save();

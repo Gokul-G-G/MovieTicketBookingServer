@@ -18,7 +18,6 @@ export const verifyMovieAccess = async (req, res, next) => {
     // Verifying the token using the secret key
     const decoded = jwt.verify(token, process.env.SECRET_KEY);
     let user;
-
     // Fetch User Based on Role
     if (decoded.role === "user") {
       user = await User.findById(decoded.id).select("-password");
@@ -49,20 +48,14 @@ export const authorizedMovieUser = (req, res, next) => {
   next();
 };
 
-// Middleware to allow only theater owners
-export const authorizedMovieTheaterOwner = (req, res, next) => {
-  if (req.user.role !== "theaterOwner") {
-    return res
-      .status(403)
-      .json({ message: "Access Denied: Theater Owners Only" });
+// Middleware to allow only Admin and TheaterOwner
+export const authorizedTheaterOwnerOrAdmin = (req, res, next) => {
+  if (req.user.role !== "theaterOwner" && req.user.role !== "admin") {
+    return res.status(403).json({
+      message:
+        "Access Denied: Only Admins & Theater Owners can perform this action.",
+    });
   }
   next();
 };
 
-// Middleware to allow only admins
-export const authorizedMovieAdmin = (req, res, next) => {
-  if (req.user.role !== "admin") {
-    return res.status(403).json({ message: "Access Denied: Admins Only" });
-  }
-  next();
-};

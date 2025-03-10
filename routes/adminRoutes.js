@@ -1,8 +1,8 @@
 import express from "express";
-import { adminLogin, adminLogout, adminProfile, deleteTheater, deleteUser, getAllTheater, getAllUsers } from "../controllers/adminController.js";
+import { adminLogin, adminLogout, adminProfile, deleteTheater, deleteUser, getAdminNotifications, getAllTheater, getAllUsers, markNotificationAsReadAndVerify} from "../controllers/adminController.js";
 import { authorizedAdmin } from "../middlewares/adminAuthMiddleware.js";
-import { verifyMovieAccess } from "../middlewares/authorizeRoles.js";
-import { addMovie } from "../controllers/movieController.js";
+import { authorizedTheaterOwnerOrAdmin, verifyMovieAccess } from "../middlewares/authorizeRoles.js";
+import { addMovie,updateMovie,deleteMovie,getAllMovies } from "../controllers/movieController.js";
 
 const router = express.Router();
 
@@ -10,6 +10,10 @@ const router = express.Router();
 router.post("/login",adminLogin);
 router.post("/logout", authorizedAdmin,adminLogout);
 router.get("/profile", authorizedAdmin,adminProfile);
+
+//Admin Notification control Routes
+router.get("/notifications",authorizedAdmin,getAdminNotifications)
+router.put("/notifications/:id",authorizedAdmin,markNotificationAsReadAndVerify)
 
 //User Management Routes
 router.get("/users", authorizedAdmin,getAllUsers);
@@ -20,10 +24,10 @@ router.get("/theaters", authorizedAdmin,getAllTheater);
 router.delete("/theaters/:id", authorizedAdmin,deleteTheater);
 
 //Movie Management Routes
-// router.get("/movies", authorizedAdmin, getAllMovies);
-router.post("/movies",verifyMovieAccess,authorizedAdmin,addMovie);
-// router.put("/movies/:id", authorizedAdmin, updateMovie);
-// router.delete("/movies/:id", authorizedAdmin, deleteMovie);
+router.get("/movies", authorizedAdmin,getAllMovies);
+router.post("/movies",verifyMovieAccess,authorizedTheaterOwnerOrAdmin,addMovie);// Add movie
+router.put("/movies/:id",verifyMovieAccess,authorizedTheaterOwnerOrAdmin,updateMovie); // edit movie
+router.delete("/movies/:id",verifyMovieAccess,authorizedTheaterOwnerOrAdmin,deleteMovie); //delete movie
 
 //Booking Reports Routes
 // router.get("/bookings", authorizedAdmin, getAllBookings);
