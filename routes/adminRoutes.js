@@ -30,11 +30,11 @@ router.put("/movies/:id",verifyMovieAccess,authorizedTheaterOwnerOrAdmin,updateM
 router.delete("/movies/:id",verifyMovieAccess,authorizedTheaterOwnerOrAdmin,deleteMovie); //delete movie
 
 //Booking Reports Routes
-// router.get("/bookings", authorizedAdmin, getAllBookings);
-// router.get("/revenue", authorizedAdmin, getRevenue);
+// router.get("/bookings", authorizedAdmin,);
+// router.get("/revenue", authorizedAdmin,);
 
 //Support & Feedback Routes
-// router.get("/feedback", authorizedAdmin, getFeedback);
-// router.delete("/feedback/:id", authorizedAdmin, deleteFeedback);
+// router.get("/feedback", authorizedAdmin,);
+// router.delete("/feedback/:id", authorizedAdmin,);
 
 export default router;

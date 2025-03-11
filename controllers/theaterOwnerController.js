@@ -6,6 +6,7 @@ import bcrypt from "bcrypt";
 import crypto from "crypto";
 import sendEmail from "../utils/sendEmail.js";
 import { Movie } from "../models/movieModel.js";
+import { Show } from "../models/showsModel.js";
 
 /*==========
    SIGNUP
@@ -58,9 +59,9 @@ export const ownerSignup = async (req, res) => {
     const generateSeatStructure = (seatType, row, seat) => {
       let seatRows = [];
       const seatTypes = {
-        Silver: ["A", "B", "C"],
-        Gold: ["D", "E", "F"],
-        Platinum: ["G", "H", "I"],
+        Silver: ["I", "H", "G"],
+        Gold: ["F", "E", "D"],
+        Platinum: ["C", "B", "A"],
       };  
       const selectedRows = seatTypes[seatType];
       for (let i = 0; i < row; i++) {
@@ -357,3 +358,72 @@ export const getMovies = async (req, res) => {
     res.status(500).json({ message: error.message || "Internal Server Error" });
   }
 } 
+
+/*==========
+  GET SHOWS
+============ */
+export const getShows = async (req, res) => {
+  try {
+    //Get user Id from the Request
+    const ownerId = req.user.id;
+    // Find all movies where the theaterOwnerId matches
+    const show = await Show.find({ createdBy: ownerId });
+    // Check if movies exist
+    if (!show || show.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "No Shows found for this theater owner",
+      });
+    }
+    res.status(200).json({
+      success: true,
+      data: show,
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message || "Internal Server Error" });
+  }
+}; 
+
+/*==========
+  BOOKING DETAILS
+============ */
+export const getBookings = async (req, res) => {
+  try {
+    // Ensure the user is a theater owner
+    if (req.user.role !== "theaterOwner") {
+      return res.status(403).json({
+        success: false,
+        message: "Access Denied! Only theater owners can view bookings.",
+      });
+    }
+
+    // Find all shows created by this theater owner
+    const shows = await Show.find({ theaterId: req.user._id });
+
+    // Extract the IDs of the shows
+    const showIds = shows.map((show) => show._id);
+
+    // Find all bookings for the shows owned by the theater owner
+    const bookings = await Booking.find({ showId: { $in: showIds } })
+      .populate("userId", "name email") // Fetch user details
+      .populate("showId", "movieId date timeSlots") // Fetch movie and show details
+      .populate({
+        path: "showId",
+        populate: {
+          path: "movieId",
+          select: "title duration genre",
+        },
+      });
+
+    res.status(200).json({
+      success: true,
+      message: "Bookings retrieved successfully!",
+      bookings,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message || "Internal Server Error",
+    });
+  }
+};

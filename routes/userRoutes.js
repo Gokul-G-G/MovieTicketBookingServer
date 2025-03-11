@@ -38,7 +38,6 @@ router.get("/movies", authorizeUser, getAllMovies);
 // Route to book a show (protected route)
 router.post("/book", authorizeUser,bookShow);
 
-//payment
 
 
 export default router;

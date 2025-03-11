@@ -1,36 +1,55 @@
-
- import { qrCodeGenerator } from "../utils/qrCodeGenerator.js";// Utility to generate QR codes
-
+import { qrCodeGenerator } from "../utils/qrCodeGenerator.js"; // Utility to generate QR codes
 import { Booking } from "../models/bookingsModel.js";
 import { Show } from "../models/showsModel.js";
 import { TheaterOwner } from "../models/theaterModel.js";
 import { User } from "../models/userModel.js";
 
-
-// Book a show
 export const bookShow = async (req, res) => {
   try {
-    const userId  = req.user.id; // Extract user ID from authentication middleware
-    const { showId, theaterId, selectedSeats,seatType } = req.body;
-    console.log("SHOW ID = ",showId)
-    console.log("THEATER ID = ",theaterId)
-    console.log("SELECTED SEAT = ",selectedSeats)
+    // Extract user ID from authentication middleware
+    const userId = req.user.id;
+    const { showId, theaterId, selectedSeats, seatType } = req.body;
 
     // Validate input
-    if (!showId || !theaterId || !selectedSeats || !seatType || selectedSeats.length === 0) {
+    if (
+      !showId ||
+      !theaterId ||
+      !selectedSeats ||
+      !seatType ||
+      selectedSeats.length === 0
+    ) {
       return res.status(400).json({ error: "Invalid booking details" });
     }
 
+    // Find the show
     const show = await Show.findById(req.body.showId);
     if (!show) {
       return res.status(404).json({ message: "Show not found" });
     }
 
     // Find the seats in the theater's seat configuration
-    const theater = await TheaterOwner.findById(req.body.theaterId);
-    console.log("THEATER OWNER :::",theater)
+    const theater = await TheaterOwner.findById(req.body.theaterId);;
     if (!theater) {
       return res.status(404).json({ message: "Theater not found" });
+    }
+
+    //Check if selected seats are already booked
+    let isAnySeatBooked = false;
+    theater.seatConfiguration.forEach((seatCategory) => {
+      if (seatCategory.seatType.toLowerCase() === seatType.toLowerCase()) {
+        seatCategory.rows.forEach((row) => {
+          row.seats.forEach((seat) => {
+            if (selectedSeats.includes(seat.seatLabel) && seat.isBooked) {
+              isAnySeatBooked = true; // If any seat is already booked, flag it
+            }
+          });
+        });
+      }
+    });
+    if (isAnySeatBooked) {
+      return res
+        .status(400)
+        .json({ message: "selected seats are already booked" });
     }
 
     // Flatten all seats into one array
@@ -39,21 +58,23 @@ export const bookShow = async (req, res) => {
         row.seats.map((col) => ({
           seatLabel: `${col.seatLabel}`, // Construct seat label like "H1"
           price: seatType.price, // Get seat price
+          isBooked: col.isBooked === true, // set the seat booked
           seatType: seatType.seatType,
         }))
       )
     );
 
     // Filter by type
-    const filteredSeats = allSeats.filter((seat) => seat.seatType.toLowerCase() === req.body.seatType.toLowerCase());
+    const filteredSeats = allSeats.filter(
+      (seat) => seat.seatType.toLowerCase() === req.body.seatType.toLowerCase()
+    );
 
     console.log("Filtered seat", filteredSeats);
     // Get selected seat details
     const selectedSeatDetails = filteredSeats.filter((seat) =>
       req.body.selectedSeats.includes(seat.seatLabel)
     );
-    console.log("SELECETED SEAT :::",selectedSeatDetails)
-    
+
     // Ensure we have valid seat details
     if (selectedSeatDetails.length !== req.body.selectedSeats.length) {
       return res
@@ -66,8 +87,6 @@ export const bookShow = async (req, res) => {
       (acc, seat) => acc + seat.price,
       0
     );
-    console.log("Total Price:", totalPrice);
-
 
     // Create booking entry
     const newBooking = new Booking({
@@ -75,7 +94,7 @@ export const bookShow = async (req, res) => {
       show: showId,
       theater: theaterId,
       seats: selectedSeatDetails,
-      totalAmount:totalPrice,
+      totalAmount: totalPrice,
       paymentStatus: "Pending", // Payment integration can update this
     });
 
@@ -85,12 +104,27 @@ export const bookShow = async (req, res) => {
     // Save booking to database
     await newBooking.save();
 
+    //Update isBooked in TheaterOwner Schema
+    theater.seatConfiguration.forEach((seatCategory) => {
+      if (seatCategory.seatType.toLowerCase() === seatType.toLowerCase()) {
+        seatCategory.rows.forEach((row) => {
+          row.seats.forEach((seat) => {
+            if (selectedSeats.includes(seat.seatLabel)) {
+              seat.isBooked = true; // Mark as booked
+            }
+          });
+        });
+      }
+    });
+
+    // Save the updated theater document
+    await theater.save();
+
     res.status(201).json({
       message: "Booking successful!",
       booking: newBooking,
     });
   } catch (error) {
-    console.error("Booking error:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 };
