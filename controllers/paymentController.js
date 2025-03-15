@@ -25,7 +25,7 @@ export const createOrder = async (req, res) => {
       order,
     });
   } catch (error) {
-    console.error("Error creating order:", error);
+
     res.status(500).json({ message: "Error creating payment order" });
   }
 };

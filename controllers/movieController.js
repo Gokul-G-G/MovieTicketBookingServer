@@ -21,13 +21,11 @@ export const addMovie = async (req, res) => {
 
     // Only Theater Owners and Admins can add movies
     if (req.user.role !== "theaterOwner" && req.user.role !== "admin") {
-      return res
-        .status(403)
-        .json({
-          success: false,
-          message:
-            "Access Denied! Only Theater Owners and Admins can add movies.",
-        });
+      return res.status(403).json({
+        success: false,
+        message:
+          "Access Denied! Only Theater Owners and Admins can add movies.",
+      });
     }
 
     const newMovie = new Movie({
@@ -46,20 +44,16 @@ export const addMovie = async (req, res) => {
     });
 
     await newMovie.save();
-    res
-      .status(201)
-      .json({
-        success: true,
-        message: "Movie added successfully!",
-        movie: newMovie,
-      });
+    res.status(201).json({
+      success: true,
+      message: "Movie added successfully!",
+      movie: newMovie,
+    });
   } catch (error) {
-    res
-      .status(500)
-      .json({
-        success: false,
-        message: error.message || "Internal Server Error",
-      });
+    res.status(500).json({
+      success: false,
+      message: error.message || "Internal Server Error",
+    });
   }
 };
 
@@ -71,12 +65,10 @@ export const getAllMovies = async (req, res) => {
     const movies = await Movie.find();
     res.status(200).json({ success: true, movies });
   } catch (error) {
-    res
-      .status(500)
-      .json({
-        success: false,
-        message: error.message || "Internal Server Error",
-      });
+    res.status(500).json({
+      success: false,
+      message: error.message || "Internal Server Error",
+    });
   }
 };
 
@@ -87,23 +79,19 @@ export const getMoviesByTheaterOwner = async (req, res) => {
   try {
     // Only Theater Owners can fetch their added movies
     if (req.user.role !== "TheaterOwner") {
-      return res
-        .status(403)
-        .json({
-          success: false,
-          message: "Access Denied! Only Theater Owners can view their movies.",
-        });
+      return res.status(403).json({
+        success: false,
+        message: "Access Denied! Only Theater Owners can view their movies.",
+      });
     }
 
     const movies = await Movie.find({ createdBy: req.user._id });
     res.status(200).json({ success: true, movies });
   } catch (error) {
-    res
-      .status(500)
-      .json({
-        success: false,
-        message: error.message || "Internal Server Error",
-      });
+    res.status(500).json({
+      success: false,
+      message: error.message || "Internal Server Error",
+    });
   }
 };
 
@@ -120,12 +108,10 @@ export const getMovieById = async (req, res) => {
     }
     res.status(200).json({ success: true, movie });
   } catch (error) {
-    res
-      .status(500)
-      .json({
-        success: false,
-        message: error.message || "Internal Server Error",
-      });
+    res.status(500).json({
+      success: false,
+      message: error.message || "Internal Server Error",
+    });
   }
 };
 
@@ -147,41 +133,32 @@ export const updateMovie = async (req, res) => {
       description,
     } = req.body;
 
-    console.log("🔍 Update Movie Request Received:", req.params.id);
-    console.log("📌 User Role:", req.user.createdBy);
-    console.log("👤 User ID:", req.user._id);
-
     const movie = await Movie.findById(req.params.id);
     if (!movie) {
-      console.log("❌ Movie Not Found:", req.params.id);
-      return res.status(404).json({ success: false, message: "Movie not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Movie not found" });
     }
-
-    console.log("🎬 Movie Creator ID:", movie.createdBy);
-    console.log("🎭 Movie Creator Role:", movie.creatorRole);
 
     // Admin can edit any movie, but Theater Owner can only edit their own movies
     if (
       req.user.role === "theaterOwner" &&
       movie.createdBy.toString() !== req.user._id.toString()
     ) {
-      console.log("⛔ Access Denied: Theater Owner trying to edit another's movie");
       return res.status(403).json({
         success: false,
-        message: "Access Denied! You can only edit movies that you have created.",
+        message:
+          "Access Denied! You can only edit movies that you have created.",
       });
     }
 
     // Theater Owner should not be able to edit movies created by Admins
     if (req.user.role === "theaterOwner" && movie.creatorRole === "admin") {
-      console.log("⛔ Access Denied: Theater Owner trying to edit Admin's movie");
       return res.status(403).json({
         success: false,
         message: "Access Denied! You cannot edit movies created by an Admin.",
       });
     }
-
-    console.log("✅ Authorization Passed: Editing Movie");
 
     // Update only provided fields
     movie.title = title || movie.title;
@@ -197,21 +174,18 @@ export const updateMovie = async (req, res) => {
 
     await movie.save();
 
-    console.log("✅ Movie Updated Successfully:", movie._id);
     res.status(200).json({
       success: true,
       message: "Movie updated successfully!",
       movie,
     });
   } catch (error) {
-    console.error("🔥 Error Updating Movie:", error);
     res.status(500).json({
       success: false,
       message: error.message || "Internal Server Error",
     });
   }
 };
-
 
 /* ===============
    DELETE MOVIE (Only Admins or Movie Creator)
@@ -230,12 +204,10 @@ export const deleteMovie = async (req, res) => {
       movie.createdBy.toString() !== req.user._id.toString() &&
       req.user.role !== "Admin"
     ) {
-      return res
-        .status(403)
-        .json({
-          success: false,
-          message: "Access Denied! You are not the creator of this movie.",
-        });
+      return res.status(403).json({
+        success: false,
+        message: "Access Denied! You are not the creator of this movie.",
+      });
     }
 
     await Movie.findByIdAndDelete(req.params.id);
@@ -243,11 +215,9 @@ export const deleteMovie = async (req, res) => {
       .status(200)
       .json({ success: true, message: "Movie deleted successfully!" });
   } catch (error) {
-    res
-      .status(500)
-      .json({
-        success: false,
-        message: error.message || "Internal Server Error",
-      });
+    res.status(500).json({
+      success: false,
+      message: error.message || "Internal Server Error",
+    });
   }
 };

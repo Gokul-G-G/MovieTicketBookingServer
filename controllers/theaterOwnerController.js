@@ -7,6 +7,7 @@ import crypto from "crypto";
 import sendEmail from "../utils/sendEmail.js";
 import { Movie } from "../models/movieModel.js";
 import { Show } from "../models/showsModel.js";
+import { Booking } from "../models/bookingsModel.js";
 
 /*==========
    SIGNUP
