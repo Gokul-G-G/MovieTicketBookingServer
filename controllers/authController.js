@@ -1,4 +1,4 @@
-import bcrypt from "bcryptjs";
+import bcrypt from 'bcrypt'
 import jwt from "jsonwebtoken";
 import { User } from "../models/userModel.js";
 import { TheaterOwner } from "../models/theaterModel.js";
@@ -17,6 +17,12 @@ export const loginUser = async (req, res) => {
     if (!user) {
       user = await TheaterOwner.findOne({ email });
       role = "theaterOwner";
+      //Check user profile is Verified
+      if (user && role === "theaterOwner" && !user.isVerified) {
+        return res
+          .status(400)
+          .json({ message: "User account is not Verified" });
+      }
     }
 
     // Check in Admin collection if not found in both

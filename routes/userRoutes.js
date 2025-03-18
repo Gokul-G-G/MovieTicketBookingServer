@@ -13,12 +13,14 @@ import {
 import { authorizeUser } from "../middlewares/userAuthMiddleware.js";
 import { getAllMovies } from "../controllers/movieController.js";
 import { bookShow } from "../controllers/bookingController.js";
+import { loginUser } from "../controllers/authController.js";
+
 
 const router = express.Router();
 
 // Authentication Routes
 router.post("/signup", userSignup);
-router.put("/login", userLogin);
+router.put("/login",loginUser, userLogin);
 router.post("/logout", userLogout);
 
 // User Profile Routes

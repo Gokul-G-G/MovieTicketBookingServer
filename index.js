@@ -2,7 +2,7 @@ import express from "express";
 import { connectDB } from "./config/db.js";
 import { apiRouter } from "./routes/index.js";
 import cookieParser from "cookie-parser";
-
+import cors from 'cors'
 // Creating an Express application
 const app = express();
 // Defining the port from environment variables
@@ -10,6 +10,15 @@ const port = process.env.PORT
 
 // Connecting to the database
 connectDB()
+// CORS Configuration
+app.use(
+  cors({
+    origin: "http://localhost:5173", // Allow frontend origin
+    credentials: true, // Allow cookies and authentication headers
+    methods: "GET,POST,PUT,DELETE", // Allowed methods
+    allowedHeaders: "Content-Type,Authorization", // Allowed headers
+  })
+);
 // Middleware to parse incoming JSON requests
 app.use(express.json())
 // Middleware to parse cookies from request headers

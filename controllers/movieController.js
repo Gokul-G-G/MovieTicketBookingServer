@@ -17,6 +17,7 @@ export const addMovie = async (req, res) => {
       bannerImage,
       posterImage,
       description,
+      language,
     } = req.body;
 
     // Only Theater Owners and Admins can add movies
@@ -39,6 +40,7 @@ export const addMovie = async (req, res) => {
       bannerImage,
       posterImage,
       description,
+      language,
       createdBy: req.user._id,
       creatorRole: req.user.role,
     });

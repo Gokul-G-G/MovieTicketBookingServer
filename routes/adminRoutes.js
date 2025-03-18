@@ -3,11 +3,12 @@ import { adminLogin, adminLogout, adminProfile, deleteTheater, deleteUser, getAd
 import { authorizedAdmin } from "../middlewares/adminAuthMiddleware.js";
 import { authorizedTheaterOwnerOrAdmin, verifyMovieAccess } from "../middlewares/authorizeRoles.js";
 import { addMovie,updateMovie,deleteMovie,getAllMovies } from "../controllers/movieController.js";
+import { loginUser } from "../controllers/authController.js";
 
-const router = express.Router();
+const   router = express.Router();
 
 //Admin Authentication Routes
-router.post("/login",adminLogin);
+router.post("/login",loginUser,adminLogin);
 router.post("/logout", authorizedAdmin,adminLogout);
 router.get("/profile", authorizedAdmin,adminProfile);
 

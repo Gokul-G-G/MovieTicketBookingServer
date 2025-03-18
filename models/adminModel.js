@@ -26,6 +26,11 @@ const adminSchema = new Schema(
       default: "admin",
       immutable: true, // Prevents modification of the role
     },
+    profilePic: {
+      type: String,
+      default:
+        "https://t4.ftcdn.net/jpg/02/27/45/09/360_F_227450952_KQCMShHPOPebUXklULsKsROk5AvN6H1H.jpg",
+    },
     isActive: {
       type: Boolean,
       default: true,

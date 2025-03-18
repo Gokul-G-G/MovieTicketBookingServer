@@ -198,7 +198,7 @@ export const ownerLogout = async (req, res) => {
 ============ */
 export const OwnerProfile = async (req, res) => {
   try {
-    res.status(200).json({ message: "User fetched successfully" });
+    res.status(200).json({data:req.user, message: "User fetched successfully" });
   } catch (error) {
     res
       .status(error.statuscode || 500)
@@ -338,7 +338,7 @@ export const ownerForgotPassword = async (req, res) => {
 /*==========
   GET MOVIES
 ============ */
-export const getMovies = async (req, res) => {
+export const getMovie = async (req, res) => {
   try {
     //Get user Id from the Request
     const ownerId = req.user.id;

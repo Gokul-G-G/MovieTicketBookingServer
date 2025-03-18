@@ -47,6 +47,10 @@ const movieSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
+    language:{
+      type:String,
+      required:true,
+    },
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
       refPath: "creatorRole", // Dynamic reference (TheaterOwner or Admin)
