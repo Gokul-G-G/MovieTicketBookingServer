@@ -8,7 +8,10 @@ export const bookShow = async (req, res) => {
   try {
     // Extract user ID from authentication middleware
     const userId = req.user.id;
-    const { showId, theaterId, selectedSeats, seatType } = req.body;
+    const { showId, theaterId, selectedSeats, seatType ,date , timeSlot} = req.body;
+    console.log("Incoming Booking Request:", req.body);
+    console.log("Authenticated User ID:", req.user.id);
+
 
     // Validate input
     if (
@@ -68,8 +71,6 @@ export const bookShow = async (req, res) => {
     const filteredSeats = allSeats.filter(
       (seat) => seat.seatType.toLowerCase() === req.body.seatType.toLowerCase()
     );
-
-    console.log("Filtered seat", filteredSeats);
     // Get selected seat details
     const selectedSeatDetails = filteredSeats.filter((seat) =>
       req.body.selectedSeats.includes(seat.seatLabel)

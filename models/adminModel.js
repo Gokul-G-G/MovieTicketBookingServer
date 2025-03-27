@@ -29,7 +29,7 @@ const adminSchema = new Schema(
     profilePic: {
       type: String,
       default:
-        "https://t4.ftcdn.net/jpg/02/27/45/09/360_F_227450952_KQCMShHPOPebUXklULsKsROk5AvN6H1H.jpg",
+        "https://lh3.googleusercontent.com/a/ACg8ocI93UYdIHpb50pdR3eTd6o39jAgJcqksYmpUvNNwj1vNsBI-4C-=s360-c-no",
     },
     isActive: {
       type: Boolean,

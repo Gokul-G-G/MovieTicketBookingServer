@@ -1,7 +1,7 @@
 import express from "express";
 import {
   getBookings,
-  getMovie,
+  getMovies,
   getShows,
   ownerForgotPassword,
   ownerLogin,
@@ -14,12 +14,6 @@ import {
 } from "../controllers/theaterOwnerController.js";
 import { authorizeTheaterOwner } from "../middlewares/theaterOwnerAuthMiddleware.js";
 import {
-  addMovie,
-  deleteMovie,
-  getAllMovies,
-  updateMovie,
-} from "../controllers/movieController.js";
-import {
   authorizedTheaterOwnerOrAdmin,
   verifyMovieAccess,
 } from "../middlewares/authorizeRoles.js";
@@ -29,6 +23,8 @@ import {
   editShow,
 } from "../controllers/showController.js";
 import { loginUser } from "../controllers/authController.js";
+import { getAllMovies } from "../controllers/movieController.js";
+import upload from "../middlewares/uploadMiddleware.js";
 const router = express.Router();
 
 // Authentication Routes
@@ -38,7 +34,12 @@ router.post("/logout", ownerLogout);
 
 // User Profile Routes
 router.get("/profile", authorizeTheaterOwner, OwnerProfile);
-router.put("/profile-edit", authorizeTheaterOwner, ownerProfileEdit);
+router.put(
+  "/profile-edit",
+  authorizeTheaterOwner,
+  upload.fields([{ name: "profilePic" }]),
+  ownerProfileEdit
+);
 router.put("/profile-deactivate",authorizeTheaterOwner,ownerProfileDeactivate);
 
 // Password Management
@@ -47,10 +48,6 @@ router.post("/password-forgot", ownerForgotPassword);
 
 //Movie Management
 router.get("/movies",authorizeTheaterOwner,getAllMovies)
-router.get("/movie", authorizeTheaterOwner, getMovie); //All movies created by admin
-router.post("/movie",verifyMovieAccess,authorizedTheaterOwnerOrAdmin,addMovie); //Add Movie
-router.put("/movies/:id",verifyMovieAccess,authorizedTheaterOwnerOrAdmin,updateMovie); //Edit Movie 
-router.delete("/movies/:id",verifyMovieAccess,authorizedTheaterOwnerOrAdmin,deleteMovie); //Delete Movie
 
 //Showtime Management
 router.get("/showtimes", authorizeTheaterOwner, getShows); //All Shows

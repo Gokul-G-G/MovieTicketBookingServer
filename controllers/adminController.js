@@ -127,7 +127,9 @@ export const getAllTheater = async (req, res) => {
 =============== */
 export const deleteTheater = async (req, res) => {
   try {
-    await TheaterOwner.findByIdAndDelete(req.params.id);
+    console.log(req.params.id)
+    const theater = req.params.id;
+    await TheaterOwner.findByIdAndDelete(theater);
     res.status(200).json({ message: "Theater deleted successfully" });
   } catch (error) {
     res
@@ -165,18 +167,18 @@ export const getAdminNotifications = async (req, res) => {
 export const markNotificationAsReadAndVerify = async (req, res) => {
   try {
     const notificationId = req.params.id;
-    const { isVerified } = req.body; // Admin sends true (verify) or false (reject)
+    const { isVerified, isRejected } = req.body; // Expecting only one
 
-    // Ensure isVerified is a boolean (true or false)
-    if (typeof isVerified !== "boolean") {
-      return res
-        .status(400)
-        .json({ success: false, message: "Invalid verification status" });
+    // Ensure exactly one of isVerified or isRejected is provided
+    if (isVerified === undefined && isRejected === undefined) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid request. Provide either isVerified or isRejected.",
+      });
     }
 
     // Find the notification
     const notification = await Notification.findById(notificationId);
-
     if (!notification) {
       return res
         .status(404)
@@ -191,8 +193,15 @@ export const markNotificationAsReadAndVerify = async (req, res) => {
         .json({ success: false, message: "Theater owner not found" });
     }
 
-    // Update verification status
-    theaterOwner.isVerified = isVerified;
+    // Update verification/rejection status
+    if (isVerified) {
+      theaterOwner.isVerified = true;
+      theaterOwner.isRejected = false;
+    } else if (isRejected) {
+      theaterOwner.isVerified = false;
+      theaterOwner.isRejected = true;
+    }
+
     await theaterOwner.save();
 
     // Mark notification as read
@@ -202,12 +211,14 @@ export const markNotificationAsReadAndVerify = async (req, res) => {
     res.status(200).json({
       success: true,
       message: `Theater owner ${
-        isVerified ? "verified" : "rejected"
+        isVerified ? "✅ Verified" : "❌ Rejected"
       } successfully`,
-      isVerified,
+      isVerified: !!isVerified,
+      isRejected: !!isRejected,
     });
   } catch (error) {
-    console.error("Error verifying theater owner:", error.message);
+    console.error("Error processing request:", error.message);
     res.status(500).json({ success: false, message: "Internal Server Error" });
   }
 };
+

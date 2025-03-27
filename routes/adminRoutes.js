@@ -4,6 +4,7 @@ import { authorizedAdmin } from "../middlewares/adminAuthMiddleware.js";
 import { authorizedTheaterOwnerOrAdmin, verifyMovieAccess } from "../middlewares/authorizeRoles.js";
 import { addMovie,updateMovie,deleteMovie,getAllMovies } from "../controllers/movieController.js";
 import { loginUser } from "../controllers/authController.js";
+import upload from "../middlewares/uploadMiddleware.js";
 
 const   router = express.Router();
 
@@ -26,8 +27,8 @@ router.delete("/theaters/:id", authorizedAdmin,deleteTheater);
 
 //Movie Management Routes
 router.get("/movies", authorizedAdmin,getAllMovies);
-router.post("/movies",verifyMovieAccess,authorizedTheaterOwnerOrAdmin,addMovie);// Add movie
-router.put("/movies/:id",verifyMovieAccess,authorizedTheaterOwnerOrAdmin,updateMovie); // edit movie
+router.post("/movies", authorizedAdmin, upload.fields([{ name: "posterImage" }, { name: "bannerImage" }]), addMovie); // ✅ Upload images
+router.put("/movies/:id", authorizedAdmin, upload.fields([{ name: "posterImage" }, { name: "bannerImage" }]), updateMovie); // ✅ Update with images
 router.delete("/movies/:id",verifyMovieAccess,authorizedTheaterOwnerOrAdmin,deleteMovie); //delete movie
 
 //Booking Reports Routes

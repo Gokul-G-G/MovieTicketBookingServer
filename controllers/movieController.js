@@ -1,11 +1,13 @@
 import { Movie } from "../models/movieModel.js";
-import { TheaterOwner } from "../models/theaterModel.js";
+import cloudinary from "../config/cloudinary.js";
 
 /* ===============
-   ADD A NEW MOVIE (Only Theater Owners & Admins)
+   ADD A NEW MOVIE (Only Admins)
 ================ */
 export const addMovie = async (req, res) => {
   try {
+    console.log("Received movie data===============:", req.body);
+    console.log("Received movie files==============:", req.files);
     const {
       title,
       genre,
@@ -14,25 +16,27 @@ export const addMovie = async (req, res) => {
       rating,
       director,
       cast,
-      bannerImage,
-      posterImage,
       description,
       language,
     } = req.body;
 
-    // Only Theater Owners and Admins can add movies
-    if (req.user.role !== "theaterOwner" && req.user.role !== "admin") {
-      return res.status(403).json({
-        success: false,
-        message:
-          "Access Denied! Only Theater Owners and Admins can add movies.",
-      });
-    }
+
+
+    //Convert duration (minutes) to HH:mm format
+    const hours = Math.floor(duration / 60);
+    const mins = duration % 60;
+    const formattedDuration = `${hours.toString().padStart(2, "0")}h ${mins
+      .toString()
+      .padStart(2, "0")}m`;
+
+    // Cloudinary file URLs
+    const bannerImage = req.files["bannerImage"][0]?.path || "";
+    const posterImage = req.files["posterImage"][0]?.path || "";
 
     const newMovie = new Movie({
       title,
       genre,
-      duration,
+      duration:formattedDuration,
       releaseDate,
       rating,
       director,
@@ -41,8 +45,6 @@ export const addMovie = async (req, res) => {
       posterImage,
       description,
       language,
-      createdBy: req.user._id,
-      creatorRole: req.user.role,
     });
 
     await newMovie.save();
@@ -52,10 +54,12 @@ export const addMovie = async (req, res) => {
       movie: newMovie,
     });
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message || "Internal Server Error",
-    });
+    res
+      .status(500)
+      .json({
+        success: false,
+        message: error.message || "Internal Server Error",
+      });
   }
 };
 
@@ -65,29 +69,6 @@ export const addMovie = async (req, res) => {
 export const getAllMovies = async (req, res) => {
   try {
     const movies = await Movie.find();
-    res.status(200).json({ success: true, movies });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message || "Internal Server Error",
-    });
-  }
-};
-
-/* ===============
-   GET MOVIES ADDED BY A THEATER OWNER
-================ */
-export const getMoviesByTheaterOwner = async (req, res) => {
-  try {
-    // Only Theater Owners can fetch their added movies
-    if (req.user.role !== "TheaterOwner") {
-      return res.status(403).json({
-        success: false,
-        message: "Access Denied! Only Theater Owners can view their movies.",
-      });
-    }
-
-    const movies = await Movie.find({ createdBy: req.user._id });
     res.status(200).json({ success: true, movies });
   } catch (error) {
     res.status(500).json({
@@ -118,7 +99,7 @@ export const getMovieById = async (req, res) => {
 };
 
 /* ===============
-   UPDATE MOVIE (Only Theater Owners & Admins)
+   UPDATE MOVIE (Only Admins)
 ================ */
 export const updateMovie = async (req, res) => {
   try {
@@ -142,23 +123,11 @@ export const updateMovie = async (req, res) => {
         .json({ success: false, message: "Movie not found" });
     }
 
-    // Admin can edit any movie, but Theater Owner can only edit their own movies
-    if (
-      req.user.role === "theaterOwner" &&
-      movie.createdBy.toString() !== req.user._id.toString()
-    ) {
+    // Only Admins can update movies
+    if (req.user.role !== "admin") {
       return res.status(403).json({
         success: false,
-        message:
-          "Access Denied! You can only edit movies that you have created.",
-      });
-    }
-
-    // Theater Owner should not be able to edit movies created by Admins
-    if (req.user.role === "theaterOwner" && movie.creatorRole === "admin") {
-      return res.status(403).json({
-        success: false,
-        message: "Access Denied! You cannot edit movies created by an Admin.",
+        message: "Access Denied! Only Admins can update movies.",
       });
     }
 
@@ -190,7 +159,7 @@ export const updateMovie = async (req, res) => {
 };
 
 /* ===============
-   DELETE MOVIE (Only Admins or Movie Creator)
+   DELETE MOVIE (Only Admins)
 ================ */
 export const deleteMovie = async (req, res) => {
   try {
@@ -201,14 +170,11 @@ export const deleteMovie = async (req, res) => {
         .json({ success: false, message: "Movie not found" });
     }
 
-    // Only the creator or Admin can delete the movie
-    if (
-      movie.createdBy.toString() !== req.user._id.toString() &&
-      req.user.role !== "Admin"
-    ) {
+    // Only Admins can delete movies
+    if (req.user.role !== "admin") {
       return res.status(403).json({
         success: false,
-        message: "Access Denied! You are not the creator of this movie.",
+        message: "Access Denied! Only Admins can delete movies.",
       });
     }
 

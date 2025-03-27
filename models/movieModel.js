@@ -51,16 +51,7 @@ const movieSchema = new mongoose.Schema(
       type:String,
       required:true,
     },
-    createdBy: {
-      type: mongoose.Schema.Types.ObjectId,
-      refPath: "creatorRole", // Dynamic reference (TheaterOwner or Admin)
-      required: true,
-    },
-    creatorRole: {
-      type: String,
-      enum: ["theaterOwner", "admin"], // Role of the creator
-      required: true,
-    },
+   
   },
   { timestamps: true }
 );

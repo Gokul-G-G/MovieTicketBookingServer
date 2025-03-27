@@ -1,96 +1,163 @@
+import { log } from "console";
 import { Booking } from "../models/bookingsModel.js";
 import { Movie } from "../models/movieModel.js";
 import { Show } from "../models/showsModel.js";
 import { TheaterOwner } from "../models/theaterModel.js";
+import mongoose from "mongoose";
 
 /*==========
   CREATE SHOW
 ============ */
+
+
+const predefinedSeatRows = {
+  Silver: ["A", "B", "C", "D", "E", "F"],
+  Gold: ["A", "B", "C", "D", "E", "F", "G"],
+  Platinum: ["A", "B", "C", "D", "E", "F", "G", "H"],
+};
+
+function generateSeatConfiguration(seatConfig) {
+  let usedRows = new Set();
+  let structuredSeats = [];
+
+  seatConfig.forEach(({ seatType, price, rows, seats }) => {
+    const availableRows = predefinedSeatRows[seatType] || [];
+
+    // Get the next available rows and mark them as used
+    const assignedRows = availableRows
+      .filter((row) => !usedRows.has(row))
+      .slice(0, rows);
+    assignedRows.forEach((row) => usedRows.add(row)); // Mark as used
+
+    structuredSeats.push({
+      seatType,
+      price: Number(price),
+      rows: assignedRows.map((rowLabel) => ({
+        rowLabel,
+        seats: Array.from({ length: Number(seats) }, (_, seatIndex) => ({
+          seatLabel: `${rowLabel}${seatIndex + 1}`,
+          isBooked: false,
+        })),
+      })),
+    });
+  });
+
+  return structuredSeats;
+}
+
 export const addShow = async (req, res) => {
   try {
-    const { movieId, screen, date, timeSlots } = req.body;
+    const {
+      movieId,
+      screen,
+      startDate,
+      endDate,
+      timeSlots,
+      seatConfiguration,
+    } = req.body;
 
-    // Validate required fields
-    if (!movieId || !screen || !date || !timeSlots || timeSlots.length === 0) {
-      return res.status(400).json({
-        success: false,
-        message: "Please provide all required fields.",
-      });
+    if (
+      !movieId ||
+      !screen ||
+      !startDate ||
+      !endDate ||
+      !timeSlots ||
+      timeSlots.length === 0 ||
+      !seatConfiguration ||
+      seatConfiguration.length === 0
+    ) {
+      return res
+        .status(400)
+        .json({
+          success: false,
+          message: "Please provide all required fields.",
+        });
+    }
+    if (!mongoose.Types.ObjectId.isValid(movieId)) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid movieId format." });
     }
 
-    // Check if the movie exists
     const movie = await Movie.findById(movieId);
     if (!movie) {
-      return res.status(404).json({
-        success: false,
-        message: "Movie not found.",
-      });
+      return res
+        .status(404)
+        .json({ success: false, message: "Movie not found." });
     }
 
-    // Ensure that the user is a theater owner
     if (req.user.role !== "theaterOwner") {
-      return res.status(403).json({
-        success: false,
-        message: "Access Denied! Only theater owners can add shows.",
-      });
+      return res
+        .status(403)
+        .json({
+          success: false,
+          message: "Access Denied! Only theater owners can add shows.",
+        });
     }
 
-    // Fetch the theater owner's seat configuration
-    const theaterOwner = await TheaterOwner.findById(req.user._id);
-    if (!theaterOwner) {
-      return res.status(403).json({
-        success: false,
-        message: "Theater owner not found.",
-      });
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    if (start > end) {
+      return res
+        .status(400)
+        .json({
+          success: false,
+          message: "End date must be after start date.",
+        });
     }
 
-    if (!theaterOwner.seatConfiguration || theaterOwner.seatConfiguration.length === 0) {
-      return res.status(400).json({
-        success: false,
-        message: "Theater owner must have a seat configuration.",
-      });
+    const showDates = [];
+    let currentDate = new Date(start);
+    while (currentDate <= end) {
+      showDates.push(currentDate.toISOString().split("T")[0]);
+      currentDate.setDate(currentDate.getDate() + 1);
     }
 
-    // Map over timeSlots and generate seats dynamically based on theater owner's seatConfig
-    const formattedTimeSlots = timeSlots.map((slot) => ({
-      time: slot,
-      seats: theaterOwner.seatConfiguration.map((seat) => ({
-        seatType: seat.seatType,
-        totalSeats: seat.totalSeats,
-        price: seat.price,
-        bookedSeats: [],
-      })),
-    }));
+    const createdShows = [];
 
-    // Compute total seats
-    const totalSeats = theaterOwner.seatConfiguration.reduce(
-      (acc, seat) => acc + seat.totalSeats,
-      0
-    );
+    for (const date of showDates) {
+      const existingShow = await Show.findOne({
+        theaterId: req.user._id,
+        screen,
+        "dates.date": date,
+        "dates.timeSlots.time": { $in: timeSlots },
+      });
 
-    // Create a new show
-    const newShow = new Show({
-      movieId,
-      theaterId: req.user._id,
-      screen,
-      date,
-      timeSlots: formattedTimeSlots,
-      totalSeats,
-      status: "Scheduled",
-    });
+      if (existingShow) continue;
 
-    // Save to database
-    await newShow.save();
+      // Use the new seat generation function
+      const structuredSeatTypes = generateSeatConfiguration(seatConfiguration);
+
+      console.log("StructuredSeat", structuredSeatTypes);
+
+      const formattedTimeSlots = timeSlots.map((slot) => ({
+        time: slot,
+        seatTypes: structuredSeatTypes,
+      }));
+
+      const newShow = new Show({
+        movieId,
+        theaterId: req.user._id,
+        screen,
+        dates: [{ date, timeSlots: formattedTimeSlots }],
+        status: "Scheduled",
+      });
+
+      await newShow.save();
+      createdShows.push(newShow);
+    }
 
     res.status(201).json({
       success: true,
-      message: "Show added successfully!",
-      show: newShow,
+      message: `Shows added from ${startDate} to ${endDate}`,
+      shows: createdShows,
     });
   } catch (error) {
+    console.error("Error in addShow:", error.response?.data || error.message);
     res.status(500).json({ message: error.message || "Internal Server Error" });
   }
 };
+
 
 /*==========
   EDIT SHOW
@@ -177,12 +244,10 @@ export const editShow = async (req, res) => {
       show,
     });
   } catch (error) {
-    res
-      .status(500)
-      .json({
-        success: false,
-        message: error.message || "Internal Server Error",
-      });
+    res.status(500).json({
+      success: false,
+      message: error.message || "Internal Server Error",
+    });
   }
 };
 
@@ -191,7 +256,6 @@ export const editShow = async (req, res) => {
 ============ */
 export const deleteShow = async (req, res) => {
   try {
-  
     const show = await Show.findById(req.params.id);
     if (!show) {
       return res
@@ -221,11 +285,115 @@ export const deleteShow = async (req, res) => {
       .status(200)
       .json({ success: true, message: "Show deleted successfully!" });
   } catch (error) {
-    res
-      .status(500)
-      .json({
-        success: false,
-        message: error.message || "Internal Server Error",
+    res.status(500).json({
+      success: false,
+      message: error.message || "Internal Server Error",
+    });
+  }
+};
+
+/*==========
+  GET ALL SHOW
+============ */
+export const getAllShows = async (req, res) => {
+  try {
+    console.log("Received movieId:", req.params.id);
+
+    const shows = await Show.find({ movieId: req.params.id })
+      .populate("movieId", "title poster date") // Populate movie details
+      .populate({
+        path: "theaterId",
+        select: "theaterId name location", // Select required fields
       });
+
+    console.log("Shows Available for that movie:", shows);
+
+    if (!shows || shows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "No shows found.",
+      });
+    }
+
+    // Formatting the response
+    const formattedShows = shows.map((show) => ({
+      _id: show._id,
+      movie: show.movieId, // Movie details
+      theaterId: show.theaterId?._id || "Unknown",
+      theater: {
+        name: show.theaterId?.name || "Unknown",
+        location: show.theaterId?.location || "Unknown",
+      },
+      screen: show.screen,
+      dates: (show.dates || []).map((dateObj) => ({
+        date: dateObj.date,
+        timeSlots: (dateObj.timeSlots || []).map((slot) => ({
+          time: slot.time,
+          seatTypes: (slot.seatTypes || []).map((seatType) => ({
+            seatType: seatType.seatType,
+            price: seatType.price,
+            rows: (seatType.rows || []).map((row) => ({
+              rowLabel: row.rowLabel,
+              seats: (row.seats || []).map((seat) => ({
+                seatLabel: seat.seatLabel,
+                isBooked: seat.isBooked,
+                seatId:seat._id
+              })),
+            })),
+          })),
+        })),
+      })),
+      totalSeats: show.totalSeats || 0,
+      status: show.status,
+    }));
+
+    res.status(200).json({
+      success: true,
+      message: "Shows fetched successfully!",
+      shows: formattedShows,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message || "Internal Server Error",
+    });
+  }
+};
+
+
+/*==========
+  SEAT AVAILABILITY
+============ */
+
+export const getSeats = async (req, res) => {
+  try {
+    const { showId } = req.params;
+    const { time } = req.query;
+
+    if (!time) {
+      return res.status(400).json({ message: "Time slot is required." });
+    }
+
+    // Fetch the show details including seat configuration
+    const show = await Show.findById(showId).populate("theater");
+
+    if (!show || !show.theater) {
+      return res.status(404).json({ message: "Show or theater not found." });
+    }
+
+    // Get already booked seats for this time slot
+    const bookedSeats = await Booking.find({
+      showId,
+      timeSlot: time,
+    }).distinct("selectedSeats");
+
+    // Send both seat configuration and booked seats
+    res.status(200).json({
+      seatConfiguration: show.theater.seatConfiguration,
+      bookedSeats,
+    });
+  } catch (error) {
+    console.error("Error fetching booked seats:", error);
+    res.status(500).json({ message: "Internal Server Error" });
   }
 };

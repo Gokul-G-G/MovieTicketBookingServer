@@ -14,6 +14,7 @@ import { authorizeUser } from "../middlewares/userAuthMiddleware.js";
 import { getAllMovies } from "../controllers/movieController.js";
 import { bookShow } from "../controllers/bookingController.js";
 import { loginUser } from "../controllers/authController.js";
+import { getAllShows, getSeats } from "../controllers/showController.js";
 
 
 const router = express.Router();
@@ -38,7 +39,10 @@ router.get("/check-user", authorizeUser, userAvailable);
 //Movie Booking
 router.get("/movies", authorizeUser, getAllMovies);
 // Route to book a show (protected route)
-router.post("/book", authorizeUser,bookShow);
+
+router.get("/book/:id", authorizeUser,getAllShows);
+router.post("/booked", authorizeUser,bookShow);
+router.get("/booked/:showId",authorizeUser,getSeats)
 
 
 

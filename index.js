@@ -15,10 +15,11 @@ app.use(
   cors({
     origin: "http://localhost:5173", // Allow frontend origin
     credentials: true, // Allow cookies and authentication headers
-    methods: "GET,POST,PUT,DELETE", // Allowed methods
+    methods: "GET,POST,PUT,DELETE,OPTION", // Allowed methods
     allowedHeaders: "Content-Type,Authorization", // Allowed headers
   })
 );
+app.use(express.urlencoded({ extended: true }));
 // Middleware to parse incoming JSON requests
 app.use(express.json())
 // Middleware to parse cookies from request headers
