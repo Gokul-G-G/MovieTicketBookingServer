@@ -28,6 +28,10 @@ const bookingSchema = new Schema(
     },
     bookingTime: { type: Date, default: Date.now }, // Timestamp of booking
     qrCode: { type: String }, // Store QR code URL (Generated dynamically)
+
+    // ✅ Added Show Date & Time
+    showDate: { type: String, required: true }, // e.g., "2025-03-29"
+    showTime: { type: String, required: true }, // e.g., "18:30"
   },
   { timestamps: true }
 );

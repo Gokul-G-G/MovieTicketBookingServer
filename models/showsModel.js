@@ -1,9 +1,10 @@
 import mongoose, { Schema } from "mongoose";
 
-// Seat Schema - Represents an individual seat
+// Seat Schema - Represents an individual seat (NOW INCLUDES PRICE)
 const seatSchema = new Schema({
   seatLabel: { type: String, required: true }, // e.g., H1, H2, G3
   isBooked: { type: Boolean, default: false }, // Booking status
+  price: { type: Number, required: true }, // ✅ Price is now in seatSchema
 });
 
 // Row Schema - Represents a row containing multiple seats
@@ -19,7 +20,6 @@ const seatTypeSchema = new Schema({
     enum: ["Silver", "Gold", "Platinum"],
     required: true,
   },
-  price: { type: Number, required: true }, // Price per seat
   rows: [rowSchema], // Rows containing seats
 });
 
@@ -49,7 +49,7 @@ const showSchema = new Schema(
       required: true,
     },
     screen: { type: String, required: true }, // Screen info
-    dates: [dateSchema], // Updated: Each show has multiple dates
+    dates: [dateSchema], // Each show has multiple dates
     status: {
       type: String,
       enum: ["Scheduled", "Completed", "Cancelled"],

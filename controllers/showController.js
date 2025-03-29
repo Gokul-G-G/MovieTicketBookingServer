@@ -37,6 +37,7 @@ function generateSeatConfiguration(seatConfig) {
         seats: Array.from({ length: Number(seats) }, (_, seatIndex) => ({
           seatLabel: `${rowLabel}${seatIndex + 1}`,
           isBooked: false,
+          price: Number(price),
         })),
       })),
     });
@@ -316,36 +317,38 @@ export const getAllShows = async (req, res) => {
     }
 
     // Formatting the response
-    const formattedShows = shows.map((show) => ({
-      _id: show._id,
-      movie: show.movieId, // Movie details
-      theaterId: show.theaterId?._id || "Unknown",
-      theater: {
-        name: show.theaterId?.name || "Unknown",
-        location: show.theaterId?.location || "Unknown",
-      },
-      screen: show.screen,
-      dates: (show.dates || []).map((dateObj) => ({
-        date: dateObj.date,
-        timeSlots: (dateObj.timeSlots || []).map((slot) => ({
-          time: slot.time,
-          seatTypes: (slot.seatTypes || []).map((seatType) => ({
-            seatType: seatType.seatType,
-            price: seatType.price,
-            rows: (seatType.rows || []).map((row) => ({
-              rowLabel: row.rowLabel,
-              seats: (row.seats || []).map((seat) => ({
-                seatLabel: seat.seatLabel,
-                isBooked: seat.isBooked,
-                seatId:seat._id
-              })),
+  const formattedShows = shows.map((show) => ({
+    _id: show._id,
+    movie: show.movieId,
+    theaterId: show.theaterId?._id || "Unknown",
+    theater: {
+      name: show.theaterId?.name || "Unknown",
+      location: show.theaterId?.location || "Unknown",
+    },
+    screen: show.screen,
+    dates: (show.dates || []).map((dateObj) => ({
+      date: dateObj.date,
+      timeSlots: (dateObj.timeSlots || []).map((slot) => ({
+        time: slot.time,
+        seatTypes: (slot.seatTypes || []).map((seatType) => ({
+          seatType: seatType.seatType,
+          rows: (seatType.rows || []).map((row) => ({
+            rowLabel: row.rowLabel,
+            seats: (row.seats || []).map((seat) => ({
+              seatLabel: seat.seatLabel,
+              isBooked: seat.isBooked,
+              seatId: seat._id,
+              price: seat.price, // ✅ Include the price here
             })),
           })),
+          price: seatType.rows?.[0]?.seats?.[0]?.price || 0, // ✅ Extract price from first seat
         })),
       })),
-      totalSeats: show.totalSeats || 0,
-      status: show.status,
-    }));
+    })),
+    totalSeats: show.totalSeats || 0,
+    status: show.status,
+  }));
+
 
     res.status(200).json({
       success: true,
