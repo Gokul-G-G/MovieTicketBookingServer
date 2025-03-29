@@ -8,5 +8,6 @@ export const generateToken = (id,role)=>{
       return token;
     } catch (error) {
         console.log(error)
+        return null;
     }
 }

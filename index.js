@@ -6,7 +6,7 @@ import cors from 'cors'
 // Creating an Express application
 const app = express();
 // Defining the port from environment variables
-const port = process.env.PORT
+const port = process.env.PORT || 5000;
 
 // Connecting to the database
 connectDB()
