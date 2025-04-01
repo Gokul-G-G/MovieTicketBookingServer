@@ -13,12 +13,13 @@ connectDB()
 // CORS Configuration
 app.use(
   cors({
-    origin: "http://localhost:5173", // Allow frontend origin
-    credentials: true, // Allow cookies and authentication headers
-    methods: "GET,POST,PUT,DELETE,OPTION", // Allowed methods
-    allowedHeaders: "Content-Type,Authorization", // Allowed headers
+    origin: process.env.FRONTEND_URL,
+    credentials: true, // ✅ Allow credentials
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
+
 app.use(express.urlencoded({ extended: true }));
 // Middleware to parse incoming JSON requests
 app.use(express.json())
@@ -38,5 +39,5 @@ app.all("*",(req,res)=>{
 })
 // Starting the Express server and listening on the specified port
 app.listen(port, () => {
-  console.log(`Example app listening on port ${port}`);
+  console.log(`App Running on  ${port}`);
 });

@@ -52,7 +52,7 @@ router.get("/movies",authorizeTheaterOwner,getAllMovies)
 //Showtime Management
 router.get("/showtimes", authorizeTheaterOwner, getShows); //All Shows
 router.post("/showtimes", authorizeTheaterOwner, addShow); // Add show
-router.put("/showtimes/:id", authorizedTheaterOwnerOrAdmin, editShow); // Edit Show
+router.put("/showtimes/:id", authorizedTheaterOwnerOrAdmin, getShows); // Edit Show
 router.delete("/showtimes/:id", authorizeTheaterOwner, deleteShow); // Delete Show
 
 //Booking management

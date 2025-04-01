@@ -1,13 +1,18 @@
-import jwt from 'jsonwebtoken'
-export const generateToken = (id,role)=>{
-    try {
-      // Generating a JWT token with the user ID and role as payload
-      const token = jwt.sign({ id, role }, process.env.SECRET_KEY, {
-        expiresIn: "30m",
-      }); // Token expiration time set to 30 minutes
-      return token;
-    } catch (error) {
-        console.log(error)
-        return null;
-    }
-}
+import jwt from "jsonwebtoken";
+
+export const generateToken = (id, role) => {
+  if (!process.env.SECRET_KEY) {
+    throw new Error("SECRET_KEY is not defined in the environment variables");
+  }
+
+  try {
+    const token = jwt.sign({ id, role }, process.env.SECRET_KEY, {
+      expiresIn: "30m", // Token expiration time (you can change this if needed)
+    });
+
+    return token;
+  } catch (error) {
+    console.error("Error generating token:", error);
+    throw new Error("Error generating token");
+  }
+};

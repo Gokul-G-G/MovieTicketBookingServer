@@ -61,7 +61,11 @@ export const loginUser = async (req, res) => {
     });
 
     // Send Response
-    res.cookie("token", token, { httpOnly: true, secure: true });
+   res.cookie("token", token, {
+     httpOnly: true,
+     secure: process.env.NODE_ENV === "production",
+   });
+   
     res.status(200).json({ message: "Login successful ✅", role, token });
   } catch (error) {
     // console.error("Login Error:", error);

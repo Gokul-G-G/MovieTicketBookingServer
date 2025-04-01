@@ -9,7 +9,7 @@ export const bookShow = async (req, res) => {
     const userId = req.user.id;
     const { showId, theaterId, selectedSeats, seatType, date, timeSlot } =
       req.body;
-console.log("Recieved data",req.body)
+// console.log("Recieved data",req.body)
     if (
       !showId ||
       !theaterId ||
@@ -44,9 +44,9 @@ console.log("Recieved data",req.body)
     let isAnySeatBooked = false;
     let seatsToBook = [];
 // console.log("SelectedTime Slot",selectedTimeSlot.seatTypes[0].rows[0].seats)
-console.log("TimeSlot===",selectedTimeSlot)
+// console.log("TimeSlot===",selectedTimeSlot)
     selectedTimeSlot.seatTypes.forEach((type) => {
-      console.log("Seat Type==",type)
+      // console.log("Seat Type==",type)
       type.rows.forEach((seats) => {
         // console.log("Seats===",seats)
         seats.seats.forEach((seat)=>{
@@ -78,9 +78,9 @@ console.log("TimeSlot===",selectedTimeSlot)
     }
 
     // ✅ Calculate total price correctly
-    console.log("Seats to Book",seatsToBook)
+    // console.log("Seats to Book",seatsToBook)
     const totalPrice = seatsToBook.reduce((acc, seat) => acc + seat.price, 0);
-    console.log("Total Amount",totalPrice)
+    // console.log("Total Amount",totalPrice)
     if (isNaN(totalPrice) || totalPrice <= 0) {
       return res
         .status(400)
@@ -112,5 +112,75 @@ console.log("TimeSlot===",selectedTimeSlot)
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+
+export const getBookingDetails = async (req,res)=>{
+  try {
+      const booking = await Booking.findById(req.params.id).populate({
+        path: "show",
+        populate: [
+          { path: "movieId", select: "title language posterImage" }, // Fetch movie details
+          { path: "theaterId", select: "name location" }, // Fetch theater details
+        ],
+      });
+      if (!booking) {
+        return res
+          .status(404)
+          .json({ success: false, message: "Booking not found" });
+      }
+      res.status(200).json({ success: true, booking });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        message: error.message || "Internal Server Error",
+      });
+    }
+}
+
+export const getUserBookings = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    // console.log("User Id==", userId);
+
+    // Find all bookings of the logged-in user
+    const bookings = await Booking.find({ user: userId }) // Fixed find() query
+      .populate({
+        path: "show",
+        populate: [
+          { path: "movieId", select: "title" }, // Fetch movie title
+          { path: "theaterId", select: "name location" }, // Fetch theater details
+        ],
+      })
+      .exec();
+
+    // console.log("Bookings==", bookings);
+
+    if (!bookings.length) {
+      return res
+        .status(404)
+        .json({ success: false, message: "No bookings found" });
+    }
+
+    // Format response
+    const formattedBookings = bookings.map((booking) => ({
+      _id: booking._id,
+      movieName: booking.show.movieId.title, // Fixed field reference
+      theaterName: booking.show.theaterId.name, // Fixed field reference
+      theaterLocation: booking.show.theaterId.location, // Added location
+      showDate: booking.showDate,
+      showTime: booking.showTime,
+      seats: booking.seats, // Fixed key from "selectedSeats"
+      totalAmount: booking.totalAmount, // Added total amount
+      paymentStatus: booking.paymentStatus, // Added payment status
+      qrCode: booking.qrCode, // Added QR Code
+      status: booking.status, // "Confirmed" or "Cancelled"
+    }));
+
+    res.status(200).json({ success: true, data: formattedBookings });
+  } catch (error) {
+    console.error("Error fetching user bookings:", error);
+    res.status(500).json({ success: false, message: "Server error" });
   }
 };

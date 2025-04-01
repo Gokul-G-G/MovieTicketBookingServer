@@ -12,7 +12,7 @@ import {
 } from "../controllers/userController.js";
 import { authorizeUser } from "../middlewares/userAuthMiddleware.js";
 import { getAllMovies } from "../controllers/movieController.js";
-import { bookShow } from "../controllers/bookingController.js";
+import { bookShow, getUserBookings } from "../controllers/bookingController.js";
 import { loginUser } from "../controllers/authController.js";
 import { getAllShows, getSeats } from "../controllers/showController.js";
 
@@ -43,6 +43,9 @@ router.get("/movies", authorizeUser, getAllMovies);
 router.get("/book/:id", authorizeUser,getAllShows);
 router.post("/booked", authorizeUser,bookShow);
 router.get("/booked/:showId",authorizeUser,getSeats)
+
+// ✅ Add User Bookings Route
+router.get("/bookings", authorizeUser, getUserBookings);
 
 
 

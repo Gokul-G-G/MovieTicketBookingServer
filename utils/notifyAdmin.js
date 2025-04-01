@@ -11,7 +11,7 @@ export const notifyAdmin = async (newtheaterOwner) => {
     });
 
     await newNotification.save();
-    console.log("New theater owner request saved for admin notification.");
+    // console.log("New theater owner request saved for admin notification.");
   } catch (error) {
     console.error("Error notifying admin:", error);
   }

@@ -80,7 +80,7 @@ export const ownerLogin = async (req, res) => {
     const { email, password } = req.body;
     //Check User exist
     const userExist = await TheaterOwner.findOne({ email });
-    console.log(userExist)
+    // console.log(userExist)
     if (!userExist) {
       res.status(400).json({ message: "User not exist" });
     }
@@ -363,8 +363,10 @@ export const getShows = async (req, res) => {
   try {
     //Get user Id from the Request
     const ownerId = req.user.id;
+    // console.log(ownerId)
     // Find all movies where the theaterOwnerId matches
-    const show = await Show.find({ createdBy: ownerId });
+    const show = await Show.find({ theaterId: ownerId });
+    // console.log("show",show)
     // Check if movies exist
     if (!show || show.length === 0) {
       return res.status(404).json({

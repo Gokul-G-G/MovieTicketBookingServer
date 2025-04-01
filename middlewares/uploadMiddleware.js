@@ -6,7 +6,7 @@ import cloudinary from "../config/cloudinary.js";
 const storage = new CloudinaryStorage({
   cloudinary,
   params: async (req, file) => {
-    console.log("Uploading File:", file); // ✅ Check if the file is reaching here
+    // console.log("Uploading File:", file); // ✅ Check if the file is reaching here
     return {
       folder: "movie_posters",
       format: file.mimetype.split("/")[1],

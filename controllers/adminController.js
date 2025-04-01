@@ -127,7 +127,7 @@ export const getAllTheater = async (req, res) => {
 =============== */
 export const deleteTheater = async (req, res) => {
   try {
-    console.log(req.params.id)
+    // console.log(req.params.id)
     const theater = req.params.id;
     await TheaterOwner.findByIdAndDelete(theater);
     res.status(200).json({ message: "Theater deleted successfully" });
@@ -156,7 +156,7 @@ export const getAdminNotifications = async (req, res) => {
 
     res.status(200).json({ success: true, data: notifications });
   } catch (error) {
-    console.error("Error fetching admin notifications:", error.message);
+    // console.error("Error fetching admin notifications:", error.message);
     res.status(500).json({ success: false, message: "Internal Server Error" });
   }
 };

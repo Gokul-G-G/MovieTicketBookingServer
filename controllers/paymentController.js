@@ -40,6 +40,15 @@ export const verifyPayment = async (req, res) => {
       bookingId,
     } = req.body;
 
+    // ✅ Allow Demo Payments
+    if (razorpay_order_id.startsWith("order_demo")) {
+      await Booking.findByIdAndUpdate(bookingId, { paymentStatus: "Paid" });
+      return res
+        .status(200)
+        .json({ message: "Demo Payment verified successfully!", demo: true });
+    }
+
+    // 🔒 Verify real Razorpay payments
     const body = razorpay_order_id + "|" + razorpay_payment_id;
     const expectedSignature = crypto
       .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
@@ -50,7 +59,7 @@ export const verifyPayment = async (req, res) => {
       return res.status(400).json({ message: "Payment verification failed" });
     }
 
-    // Update booking status to 'Paid'
+    // ✅ Update booking status to 'Paid'
     await Booking.findByIdAndUpdate(bookingId, { paymentStatus: "Paid" });
 
     res.status(200).json({ message: "Payment verified successfully!" });

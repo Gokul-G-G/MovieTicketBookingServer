@@ -129,7 +129,7 @@ export const addShow = async (req, res) => {
       // Use the new seat generation function
       const structuredSeatTypes = generateSeatConfiguration(seatConfiguration);
 
-      console.log("StructuredSeat", structuredSeatTypes);
+      // console.log("StructuredSeat", structuredSeatTypes);
 
       const formattedTimeSlots = timeSlots.map((slot) => ({
         time: slot,
@@ -154,7 +154,7 @@ export const addShow = async (req, res) => {
       shows: createdShows,
     });
   } catch (error) {
-    console.error("Error in addShow:", error.response?.data || error.message);
+    // console.error("Error in addShow:", error.response?.data || error.message);
     res.status(500).json({ message: error.message || "Internal Server Error" });
   }
 };
@@ -298,7 +298,7 @@ export const deleteShow = async (req, res) => {
 ============ */
 export const getAllShows = async (req, res) => {
   try {
-    console.log("Received movieId:", req.params.id);
+    // console.log("Received movieId:", req.params.id);
 
     const shows = await Show.find({ movieId: req.params.id })
       .populate("movieId", "title poster date") // Populate movie details
@@ -307,7 +307,7 @@ export const getAllShows = async (req, res) => {
         select: "theaterId name location", // Select required fields
       });
 
-    console.log("Shows Available for that movie:", shows);
+    // console.log("Shows Available for that movie:", shows);
 
     if (!shows || shows.length === 0) {
       return res.status(404).json({

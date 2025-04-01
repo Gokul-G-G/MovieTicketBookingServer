@@ -22,7 +22,7 @@ export const authorizeUser = async (req, res, next) => {
     }
     next();
   } catch (error) {
-    console.error("Token Verification Error:", error.message);
+    // console.error("Token Verification Error:", error.message);
     res.status(401).json({ message: "Invalid or Expired Token" });
   }
 };

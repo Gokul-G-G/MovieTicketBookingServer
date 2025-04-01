@@ -6,8 +6,8 @@ import cloudinary from "../config/cloudinary.js";
 ================ */
 export const addMovie = async (req, res) => {
   try {
-    console.log("Received movie data===============:", req.body);
-    console.log("Received movie files==============:", req.files);
+    // console.log("Received movie data===============:", req.body);
+    // console.log("Received movie files==============:", req.files);
     const {
       title,
       genre,
