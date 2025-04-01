@@ -100,7 +100,13 @@ export const userLogin = async (req, res, next) => {
 export const userLogout = async (req, res) => {
   try {
     // Clear the authentication cookie
-    res.clearCookie("token", { httpOnly: true, secure: true });
+  res.clearCookie("token", {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "None", // For cross-origin requests
+  });
+
+
 
     // Send success response
     res.status(200).json({ message: "Logout successful" });
