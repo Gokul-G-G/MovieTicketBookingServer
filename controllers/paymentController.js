@@ -6,9 +6,11 @@ import { razorpayInstance } from "../utils/razorPay.js";
 // Create an order
 export const createOrder = async (req, res) => {
   try {
+    //  console.log("Incoming payment request:", req.body);
     const { amount, currency = "INR", bookingId } = req.body;
 
     if (!amount || !bookingId) {
+      //  console.log("Error: Missing amount or bookingId");
       return res.status(400).json({ message: "Amount & Booking ID required" });
     }
 
@@ -17,8 +19,9 @@ export const createOrder = async (req, res) => {
       currency,
       receipt: `receipt_${bookingId}`,
     };
-
+      // console.log(" Creating Razorpay Order with options:", options);
     const order = await razorpayInstance.orders.create(options);
+        console.log("✅ Razorpay Order Created:", order);
 
     res.status(201).json({
       success: true,
@@ -39,14 +42,14 @@ export const verifyPayment = async (req, res) => {
       razorpay_signature,
       bookingId,
     } = req.body;
-
+// console.log("Error====",req.body)
     // ✅ Allow Demo Payments
-    if (razorpay_order_id.startsWith("order_demo")) {
-      await Booking.findByIdAndUpdate(bookingId, { paymentStatus: "Paid" });
-      return res
-        .status(200)
-        .json({ message: "Demo Payment verified successfully!", demo: true });
-    }
+    // if (razorpay_order_id.startsWith("order_demo")) {
+    //   await Booking.findByIdAndUpdate(bookingId, { paymentStatus: "Paid" });
+    //   return res
+    //     .status(200)
+    //     .json({ message: "Demo Payment verified successfully!", demo: true });
+    // }
 
     // 🔒 Verify real Razorpay payments
     const body = razorpay_order_id + "|" + razorpay_payment_id;
