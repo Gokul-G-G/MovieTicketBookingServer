@@ -6,7 +6,7 @@ import paymentRouter from "./paymentRoute.js";
 import authRouter from "./authRoutes.js";
 import { getAllMovies, getMovieById } from "../controllers/movieController.js";
 import { verifyMovieAccess } from "../middlewares/authorizeRoles.js";
-// import { getBookingDetails } from "../controllers/bookingController.js";
+import { getBookingDetails } from "../controllers/bookingController.js";
 import { userForgotPassword } from "../controllers/userController.js";
 import { ownerForgotPassword } from "../controllers/theaterOwnerController.js";
 
@@ -24,7 +24,7 @@ router.get("/movies", verifyMovieAccess, getAllMovies);
 router.get("/movies/:id", verifyMovieAccess, getMovieById);
 
 // Booking route
-// router.get("/bookings/:id", getBookingDetails);
+router.get("/bookings/:id", getBookingDetails);
 
 // Forgot password route for User
 router.post("/forgot-password/user", userForgotPassword);

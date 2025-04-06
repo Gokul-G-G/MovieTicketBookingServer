@@ -21,7 +21,7 @@ export const createOrder = async (req, res) => {
     };
       // console.log(" Creating Razorpay Order with options:", options);
     const order = await razorpayInstance.orders.create(options);
-        console.log("✅ Razorpay Order Created:", order);
+        // console.log("✅ Razorpay Order Created:", order);
 
     res.status(201).json({
       success: true,
