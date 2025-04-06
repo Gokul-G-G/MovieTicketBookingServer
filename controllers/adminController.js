@@ -6,6 +6,7 @@ import { User } from "../models/userModel.js";
 import { Notification } from "../models/notificationModel.js";
 import { TheaterOwner } from "../models/theaterModel.js";
 import { Movie } from "../models/movieModel.js";
+import { Booking } from "../models/bookingsModel.js";
 
 /* ============
  ADMIN LOGIN
@@ -222,3 +223,30 @@ export const markNotificationAsReadAndVerify = async (req, res) => {
   }
 };
 
+
+
+export const getAdminBookingsData = async (req, res) => {
+  try {
+    const bookings = await Booking.find().populate("movie").populate("theater");
+    console.log(bookings)
+
+    // Aggregating booking data
+    const bookingsByDate = {}; // { '2025-04-01': 10, '2025-04-02': 15, ... }
+    const revenueByMovie = {}; // { 'Movie A': 10000, 'Movie B': 15000, ... }
+    const bookingsByMovie = {}; // { 'Movie A': 50, 'Movie B': 75, ... }
+
+    bookings.forEach((booking) => {
+      const date = booking.createdAt.toISOString().split("T")[0];
+      bookingsByDate[date] = (bookingsByDate[date] || 0) + 1;
+
+      const movieName = booking.movie.title;
+      revenueByMovie[movieName] =
+        (revenueByMovie[movieName] || 0) + booking.totalAmount;
+      bookingsByMovie[movieName] = (bookingsByMovie[movieName] || 0) + 1;
+    });
+
+    res.json({ bookingsByDate, revenueByMovie, bookingsByMovie });
+  } catch (error) {
+    res.status(500).json({ message: "Failed to fetch booking data" });
+  }
+};

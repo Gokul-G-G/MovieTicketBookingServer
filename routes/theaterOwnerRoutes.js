@@ -3,7 +3,6 @@ import {
   getBookings,
   getMovies,
   getShows,
-  ownerForgotPassword,
   ownerLogin,
   ownerLogout,
   ownerPasswordChange,
@@ -44,7 +43,7 @@ router.put("/profile-deactivate",authorizeTheaterOwner,ownerProfileDeactivate);
 
 // Password Management
 router.put("/password-change", authorizeTheaterOwner, ownerPasswordChange);
-router.post("/password-forgot", ownerForgotPassword);
+
 
 //Movie Management
 router.get("/movies",authorizeTheaterOwner,getAllMovies)

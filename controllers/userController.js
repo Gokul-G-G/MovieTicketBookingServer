@@ -218,7 +218,7 @@ export const changePassword = async (req,res)=>{
     USER FORGOT PASSWORD  |
 ===============*/
 
-export const forgotPassword = async (req, res) => {
+export const userForgotPassword = async (req, res) => {
   try {
     //Get email from frontend
     const { email } = req.body;

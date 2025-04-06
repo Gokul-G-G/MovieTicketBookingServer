@@ -1,5 +1,5 @@
 import express from "express";
-import { adminLogin, adminLogout, adminProfile, deleteTheater, deleteUser, getAdminNotifications, getAllTheater, getAllUsers, markNotificationAsReadAndVerify} from "../controllers/adminController.js";
+import { adminLogin, adminLogout, adminProfile, deleteTheater, deleteUser, getAdminBookingsData, getAdminNotifications, getAllTheater, getAllUsers, markNotificationAsReadAndVerify} from "../controllers/adminController.js";
 import { authorizedAdmin } from "../middlewares/adminAuthMiddleware.js";
 import { authorizedTheaterOwnerOrAdmin, verifyMovieAccess } from "../middlewares/authorizeRoles.js";
 import { addMovie,updateMovie,deleteMovie,getAllMovies } from "../controllers/movieController.js";
@@ -32,7 +32,7 @@ router.put("/movies/:id", authorizedAdmin, upload.fields([{ name: "posterImage" 
 router.delete("/movies/:id",verifyMovieAccess,authorizedTheaterOwnerOrAdmin,deleteMovie); //delete movie
 
 //Booking Reports Routes
-// router.get("/bookings", authorizedAdmin,);
+router.get("/bookings", authorizedAdmin,getAdminBookingsData);
 // router.get("/revenue", authorizedAdmin,);
 
 //Support & Feedback Routes

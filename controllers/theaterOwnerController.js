@@ -251,6 +251,7 @@ export const ownerForgotPassword = async (req, res) => {
   try {
     //Get email from frontend
     const { email } = req.body;
+    // console.log(req.body)
     //Check Owner found in DB
     const owner = await TheaterOwner.findOne({ email });
     if (!owner) {

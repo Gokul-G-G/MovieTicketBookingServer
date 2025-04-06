@@ -1,7 +1,6 @@
 import express from "express";
 import {
   changePassword,
-  forgotPassword,
   userAvailable,
   userSignup,
   userLogin,
@@ -31,7 +30,6 @@ router.put("/profile-deactivate", authorizeUser, userDeactivate);
 
 // Password Management
 router.put("/password-change", authorizeUser, changePassword);
-router.post("/password-forgot", forgotPassword);
 
 // Check if user exists
 router.get("/check-user", authorizeUser, userAvailable);
