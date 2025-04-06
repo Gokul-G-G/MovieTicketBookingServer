@@ -42,16 +42,8 @@ export const verifyPayment = async (req, res) => {
       razorpay_signature,
       bookingId,
     } = req.body;
-// console.log("Error====",req.body)
-    // ✅ Allow Demo Payments
-    // if (razorpay_order_id.startsWith("order_demo")) {
-    //   await Booking.findByIdAndUpdate(bookingId, { paymentStatus: "Paid" });
-    //   return res
-    //     .status(200)
-    //     .json({ message: "Demo Payment verified successfully!", demo: true });
-    // }
 
-    // 🔒 Verify real Razorpay payments
+    // Verify Razorpay Signature
     const body = razorpay_order_id + "|" + razorpay_payment_id;
     const expectedSignature = crypto
       .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
@@ -62,10 +54,41 @@ export const verifyPayment = async (req, res) => {
       return res.status(400).json({ message: "Payment verification failed" });
     }
 
-    // ✅ Update booking status to 'Paid'
-    await Booking.findByIdAndUpdate(bookingId, { paymentStatus: "Paid" });
+    // ✅ Fetch booking & populate show
+    const booking = await Booking.findById(bookingId).populate("show");
+    if (!booking) return res.status(404).json({ message: "Booking not found" });
 
-    res.status(200).json({ message: "Payment verified successfully!" });
+    const show = booking.show;
+    const selectedDate = show.dates.find(
+      (d) => new Date(d.date).toISOString().split("T")[0] === booking.showDate
+    );
+    const selectedTimeSlot = selectedDate?.timeSlots.find(
+      (slot) => slot.time === booking.showTime
+    );
+
+    if (!selectedTimeSlot) {
+      return res.status(400).json({ message: "Invalid time slot in booking" });
+    }
+
+    // ✅ Mark booked seats
+    booking.seats.forEach((bookedSeat) => {
+      selectedTimeSlot.seatTypes.forEach((type) => {
+        type.rows.forEach((row) => {
+          row.seats.forEach((seat) => {
+            if (seat._id.toString() === bookedSeat.seatId.toString()) {
+              seat.isBooked = true;
+            }
+          });
+        });
+      });
+    });
+
+    // ✅ Save updated documents
+    await show.save();
+    booking.paymentStatus = "Paid";
+    await booking.save();
+
+    res.status(200).json({ message: "Payment verified & seats confirmed!" });
   } catch (error) {
     console.error("Payment verification error:", error);
     res.status(500).json({ message: "Payment verification failed" });

@@ -63,7 +63,7 @@ export const bookShow = async (req, res) => {
                 seatType,
                 price: seat.price,
               });
-              seat.isBooked = true; // Mark seat as booked
+              // seat.isBooked = true; // Mark seat as booked
             }
 }
         })
