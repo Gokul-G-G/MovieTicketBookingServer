@@ -3,6 +3,7 @@ import { connectDB } from "./config/db.js";
 import { apiRouter } from "./routes/index.js";
 import cookieParser from "cookie-parser";
 import cors from 'cors'
+import { startExpiredShowCleaner } from "./utils/expiredShowsCleaner.js";
 // Creating an Express application
 const app = express();
 // Defining the port from environment variables
@@ -10,6 +11,8 @@ const port = process.env.PORT || 5000;
 
 // Connecting to the database
 connectDB()
+// ✅ Start the show cleanup cron
+startExpiredShowCleaner();
 // CORS Configuration
 app.use(
   cors({
