@@ -139,7 +139,7 @@ export const getBookingDetails = async (req,res)=>{
     }
 }
 
-export const git add controllers/bookingController.jsgetUserBookings = async (req, res) => {
+export const getUserBookings = async (req, res) => {
   try {
     const userId = req.user.id;
      console.log("User Id==", userId);
