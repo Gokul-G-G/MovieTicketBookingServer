@@ -139,10 +139,10 @@ export const getBookingDetails = async (req,res)=>{
     }
 }
 
-export const getUserBookings = async (req, res) => {
+export const git add controllers/bookingController.jsgetUserBookings = async (req, res) => {
   try {
     const userId = req.user.id;
-    // console.log("User Id==", userId);
+     console.log("User Id==", userId);
 
     // Find all bookings of the logged-in user
     const bookings = await Booking.find({ user: userId }) // Fixed find() query
@@ -155,7 +155,7 @@ export const getUserBookings = async (req, res) => {
       })
       .exec();
 
-    // console.log("Bookings==", bookings);
+     console.log("Bookings==", bookings);
 
     if (!bookings.length) {
       return res
@@ -164,19 +164,22 @@ export const getUserBookings = async (req, res) => {
     }
 
     // Format response
-    const formattedBookings = bookings.map((booking) => ({
+  const formattedBookings = bookings
+    .filter((booking) => booking.show) // filter out invalid bookings
+    .map((booking) => ({
       _id: booking._id,
-      movieName: booking.show.movieId.title, // Fixed field reference
-      theaterName: booking.show.theaterId.name, // Fixed field reference
-      theaterLocation: booking.show.theaterId.location, // Added location
+      movieName: booking.show.movieId?.title || "Unknown",
+      theaterName: booking.show.theaterId?.name || "Unknown",
+      theaterLocation: booking.show.theaterId?.location || "Unknown",
       showDate: booking.showDate,
       showTime: booking.showTime,
-      seats: booking.seats, // Fixed key from "selectedSeats"
-      totalAmount: booking.totalAmount, // Added total amount
-      paymentStatus: booking.paymentStatus, // Added payment status
-      qrCode: booking.qrCode, // Added QR Code
-      status: booking.status, // "Confirmed" or "Cancelled"
+      seats: booking.seats,
+      totalAmount: booking.totalAmount,
+      paymentStatus: booking.paymentStatus,
+      qrCode: booking.qrCode,
+      status: booking.status,
     }));
+
 
     res.status(200).json({ success: true, data: formattedBookings });
   } catch (error) {
