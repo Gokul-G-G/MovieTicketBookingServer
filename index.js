@@ -2,8 +2,11 @@ import express from "express";
 import { connectDB } from "./config/db.js";
 import { apiRouter } from "./routes/index.js";
 import cookieParser from "cookie-parser";
-import cors from 'cors'
+import cors from 'cors';
+import path from "path";
+import { fileURLToPath } from "url";
 import { startExpiredShowCleaner } from "./utils/expiredShowsCleaner.js";
+
 // Creating an Express application
 const app = express();
 // Defining the port from environment variables
@@ -13,6 +16,7 @@ const port = process.env.PORT || 5000;
 connectDB()
 // ✅ Start the show cleanup cron
 startExpiredShowCleaner();
+
 // CORS Configuration
 app.use(
   cors({
@@ -34,13 +38,25 @@ app.get("/", (req, res) => {
 });
 
 // API routes - All API endpoints will be prefixed with "/api"
-app.use('/api',apiRouter)
+app.use('/api', apiRouter)
 
-// Catch-all route for undefined endpoints - Returns a 404 JSON response
-app.all("*",(req,res)=>{
-    res.status(404).json({message:"Endpoint does not exist"})
-})
+// ----------------------------------
+// ⚡ Serve Frontend (Vite production build)
+// ----------------------------------
+
+// Needed for __filename and __dirname in ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Serve static files
+app.use(express.static(path.join(__dirname, 'client')));
+
+// Any other route (except /api) should send frontend index.html
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'client', 'index.html'));
+});
+
 // Starting the Express server and listening on the specified port
 app.listen(port, () => {
-  console.log(`App Running on  ${port}`);
+  console.log(`App Running on ${port}`);
 });
