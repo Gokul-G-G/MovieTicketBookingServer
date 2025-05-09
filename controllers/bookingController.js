@@ -7,9 +7,9 @@ import { TheaterOwner } from "../models/theaterModel.js";
 export const bookShow = async (req, res) => {
   try {
     const userId = req.user.id;
-    const { showId, theaterId, selectedSeats, seatType, date, timeSlot } =
+    const { showId, theaterId, selectedSeats, seatType, date, timeSlot ,isBooked} =
       req.body;
-// console.log("Recieved data",req.body)
+//  console.log("Recieved data",req.body)
     if (
       !showId ||
       !theaterId ||
@@ -63,7 +63,7 @@ export const bookShow = async (req, res) => {
                 seatType,
                 price: seat.price,
               });
-              // seat.isBooked = true; // Mark seat as booked
+               seat.isBooked = true; // Mark seat as booked
             }
 }
         })
@@ -142,7 +142,7 @@ export const getBookingDetails = async (req,res)=>{
 export const getUserBookings = async (req, res) => {
   try {
     const userId = req.user.id;
-     console.log("User Id==", userId);
+    //  console.log("User Id==", userId);
 
     // Find all bookings of the logged-in user
     const bookings = await Booking.find({ user: userId }) // Fixed find() query
@@ -155,7 +155,7 @@ export const getUserBookings = async (req, res) => {
       })
       .exec();
 
-     console.log("Bookings==", bookings);
+    //  console.log("Bookings==", bookings);
 
     if (!bookings.length) {
       return res

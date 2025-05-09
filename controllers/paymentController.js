@@ -3,6 +3,7 @@ import crypto from "crypto";
 import { Booking } from "../models/bookingsModel.js";
 import { razorpayInstance } from "../utils/razorPay.js";
 
+
 // Create an order
 export const createOrder = async (req, res) => {
   try {
@@ -42,14 +43,14 @@ export const verifyPayment = async (req, res) => {
       razorpay_signature,
       bookingId,
     } = req.body;
-
+// console.log(req.body)
     // Verify Razorpay Signature
     const body = razorpay_order_id + "|" + razorpay_payment_id;
     const expectedSignature = crypto
       .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
       .update(body)
       .digest("hex");
-
+// console.log("Expected Signature=",expectedSignature)
     if (expectedSignature !== razorpay_signature) {
       return res.status(400).json({ message: "Payment verification failed" });
     }
@@ -71,11 +72,12 @@ export const verifyPayment = async (req, res) => {
     }
 
     // ✅ Mark booked seats
+    // console.log("Booking",booking.seats)
     booking.seats.forEach((bookedSeat) => {
       selectedTimeSlot.seatTypes.forEach((type) => {
         type.rows.forEach((row) => {
           row.seats.forEach((seat) => {
-            if (seat._id.toString() === bookedSeat.seatId.toString()) {
+            if (seat._id.toString() === bookedSeat._id.toString()) {
               seat.isBooked = true;
             }
           });
@@ -85,7 +87,7 @@ export const verifyPayment = async (req, res) => {
 
     // ✅ Save updated documents
     await show.save();
-    booking.paymentStatus = "Paid";
+    booking.paymentStatus = "Success";
     await booking.save();
 
     res.status(200).json({ message: "Payment verified & seats confirmed!" });
